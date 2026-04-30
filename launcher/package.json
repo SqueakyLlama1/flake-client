@@ -1,0 +1,25 @@
+{
+  "name": "flake-launcher",
+  "version": "0.1.0",
+  "description": "The Official Flake Launcher!",
+  "keywords": [
+    "Minecraft",
+    "Flake",
+    "Client"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "flake-client"
+  },
+  "license": "Apache-2.0",
+  "author": "Christian Bone",
+  "type": "module",
+  "main": "main.js",
+  "scripts": {
+    "test": "run"
+  },
+  "dependencies": {
+    "electron": "^41.3.0",
+    "minecraft-java-core": "^4.2.7"
+  }
+}
