@@ -9,7 +9,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "flake-client"
+    "url": "https://github.com/SqueakyLlama1/flake-client"
   },
   "license": "Apache-2.0",
   "author": "Christian Bone",
