@@ -30,7 +30,7 @@ export function loadCSS(href, parent = document.head) {
 export function unloadCSS(id) {
     if (loadedStylesheets.has(id)) {
         const link = loadedStylesheets.get(id);
-        link.remove(); // Native DOM API for element removal
+        link.remove();
         loadedStylesheets.delete(id);
     } else {
         console.warn(`Stylesheet with ID "${id}" not found.`);
