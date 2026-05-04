@@ -1,8 +1,41 @@
+/* Page Setup and Defaults */
+
+html, body {
+    height: 100%;
+}
+
 body {
     font-family: Arial, Helvetica, sans-serif;
     margin: 0;
 }
 
 :root {
-    --brand-color: 
+    --brand-primary: #1890df;
+    --brand-secondary: #63daf3;
+    --brand-tertiary: #5ccdeb;
+    --brand-quarternary: #cafeff;
+
+    --text-primary: #b0bbc2;
+    --text-secondary: #656f75;
+    --text-tertiary: #0d5788;
+    --text-quarternary: #4e6e83;
+
+    --background-primary: #00001f;
+    --background-secondary: #00002b;
+    --background-tertiary: #000041;
+    --background-quarternary: #00005c;
+}
+
+/* Layout Elements */
+
+.vertical_center {
+    display: flex;
+    position: relative;
+
+    height: 100%;
+
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
 }

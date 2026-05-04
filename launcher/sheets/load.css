@@ -1,3 +1,63 @@
 body {
-    background-color: black; /* For Debugging */
+    background: linear-gradient(0deg, var(--background-primary), var(--background-secondary), var(--background-tertiary), var(--background-quarternary));
+    color: var(--text-primary);
+    position: relative;
+    overflow: hidden;
+}
+
+#load_menu {
+    z-index: 2;
+}
+
+#load_menu_title {
+    aspect-ratio: 2268 / 788;
+    max-width: 2268px;
+    width: 50%;
+    height: auto;
+}
+
+#load_menu_copyright {
+    font-weight: bold;
+    font-size: 0.8em;
+    position: absolute;
+    bottom: 20px;
+}
+
+.loader {
+    width: 85px;
+    height: 35px;
+    --g1:conic-gradient(from  90deg at 3px  3px ,#0000 90deg,var(--brand-tertiary) 0);
+    --g2:conic-gradient(from -90deg at 22px 22px,#0000 90deg,var(--brand-tertiary) 0);
+    background:var(--g1),var(--g1),var(--g1), var(--g2),var(--g2),var(--g2);
+    background-size: 25px 25px;
+    background-repeat: no-repeat;
+    animation: l6 1s infinite alternate;
+}
+
+@keyframes l6 {
+    0%   {background-position:0 50% ,50% 50% ,100% 50% }
+    20%  {background-position:0 0   ,50% 50% ,100% 50% }
+    40%  {background-position:0 100%,50%  0  ,100% 50% }
+    60%  {background-position:0 50% ,50% 100%,100% 0   }
+    80%  {background-position:0 50% ,50% 50% ,100% 100%}
+    100% {background-position:0 50% ,50% 50% ,100% 50% }
+}
+
+.snowflake {
+    position: absolute;
+    top: -60px;
+    width: 60px;
+    height: 60px;
+    pointer-events: none;
+    animation: fall linear infinite;
+    z-index: 1;
+}
+
+@keyframes fall {
+    0% {
+        transform: translateY(-60px) translateX(0);
+    }
+    100% {
+        transform: translateY(calc(100vh + 60px)) translateX(10px);
+    }
 }
