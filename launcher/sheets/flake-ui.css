@@ -1,11 +1,19 @@
+@font-face {
+    font-family: "Mojangles";
+    src: url("../fonts/mojangles.otf") format("opentype");
+}
+
 /* Page Setup and Defaults */
+
+html { scroll-behavior: smooth; }
 
 html, body {
     height: 100%;
 }
 
 body {
-    font-family: Arial, Helvetica, sans-serif;
+    background: linear-gradient(0deg, var(--background-primary), var(--background-secondary), var(--background-tertiary), var(--background-quarternary));
+    
     margin: 0;
 }
 
@@ -24,6 +32,24 @@ body {
     --background-secondary: #00002b;
     --background-tertiary: #000041;
     --background-quarternary: #00005c;
+
+    --radius: 8px;
+}
+
+h1 span { font-size: 1.5em; }
+h2 span { font-size: 1.17em; }
+h3 span { font-size: 1em; }
+h4 span { font-size: 0.83em; }
+h5 span { font-size: 0.67em; }
+h6 span { font-size: 0.45em; }
+
+::-webkit-scrollbar { width: 7px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--brand-quarternary); }
+::-webkit-scrollbar-thumb { background: var(--brand-secondary); }
+::-webkit-scrollbar-thumb:hover { background: var(--brand-primary); }
+
+.hidden {
+    display: none !important;
 }
 
 /* Layout Elements */
@@ -38,4 +64,170 @@ body {
     flex-direction: column;
     justify-content: center;
     text-align: center;
+}
+
+/* Nivix Visual Identity Elements */
+
+.flake_ui_button {
+    background: var(--brand-tertiary);
+    border: 1px solid var(--text-tertiary);
+    border-radius: var(--radius);
+
+    font-weight: normal;
+    text-decoration: none;
+
+    cursor: pointer;
+
+    padding: 0.3rem 0.9rem;
+
+    transition: background 0.2s linear;
+}
+
+.flake_ui_button:not(button.selected):disabled {
+    background: #ccc;
+    color: var(--text-quarternary);
+    cursor: not-allowed;
+}
+
+.flake_ui_button.selected:disabled {
+    cursor: not-allowed;
+}
+
+.flake_ui_button:not(button:disabled):hover,
+.flake_ui_button:not(button:disabled):focus {
+    background: var(--brand-quarternary);
+    border-color: var(--brand-primary);
+}
+
+.flake_ui_button.selected {
+    background: var(--brand-primary);
+}
+
+/* Tex Inputs */
+.flake_ui_input[type="text"],
+.flake_ui_input[type="number"] {
+    background: var(--ce-bg-main);
+    border: 1px solid var(--brand-color);
+    border-radius: var(--radius);
+
+    font-weight: normal;
+    text-decoration: none;
+
+    padding: 0.3rem 0.6rem;
+}
+
+.flake_ui_input[type="text"]:focus,
+.flake_ui_input[type="number"]:focus {
+    background: var(--ce-bg-light);
+    border-color: var(--brand-dark);
+}
+
+.flake_ui_input::placeholder {
+    color: var(--text-muted);
+    font-weight: light;
+}
+
+/* Checkboxes */
+.flake_ui_input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+
+    width: 20px;
+    height: 20px;
+
+    border: 2px solid red;
+    border-radius: 4px;
+
+    background: transparent;
+    cursor: default;
+    transition: all 0.2s ease;
+
+    position: relative;
+    margin: 0;
+}
+
+.flake_ui_input[type="checkbox"]:checked {
+    border-color: green;
+    background: green;
+}
+
+.flake_ui_input[type="checkbox"]:checked::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+}
+
+.flake_ui_input[type="checkbox"]:hover:not(:disabled) {
+    filter: brightness(1.2);
+}
+
+.flake_ui_input[type="checkbox"]:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.flake_ui_checkbox-wrapper label {
+    font-size: 20px;
+    user-select: none;
+    cursor: default;
+}
+
+.flake_ui_checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.flake_ui_checkbox-wrapper.centered {
+    justify-content: center;
+}
+
+/* Select and Option */
+
+.flake_ui_select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    background: var(--brand-primary);
+    
+    font-weight: normal;
+    font-family: inherit;
+
+    border: 1px solid var(--brand-tertiary);
+    border-radius: var(--radius);
+
+    padding: 0.3rem 2.2rem 0.3rem 0.9rem;
+    cursor: pointer;
+
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'><path d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 0.8rem center;
+    background-size: 1.2rem;
+
+    transition: background var(--speed), box-shadow var(--speed);
+}
+
+.flake_ui_select:hover:not(:disabled),
+.flake_ui_select:focus-visible:not(:disabled) {
+    background-color: var(--brand-quarternary);
+    border-color: var(--brand-primary);
+}
+
+.flake_ui_select:disabled {
+    background: #ccc;
+    color: var(--text-quarternary);
+    cursor: not-allowed;
+}
+
+.flake_ui_select option {
+    font-weight: normal;
+    color: var(--text-tertiary);
+    background: var(--brand-quarternary);
 }

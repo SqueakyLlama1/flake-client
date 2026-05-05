@@ -1,3 +1,3 @@
-import * as load from './load.js'
+import * as load from './load.js';
 
 load.init();
