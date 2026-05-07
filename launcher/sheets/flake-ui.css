@@ -12,28 +12,29 @@ html, body {
 }
 
 body {
-    background: linear-gradient(0deg, var(--background-primary), var(--background-secondary), var(--background-tertiary), var(--background-quarternary));
+    background: linear-gradient(0deg, var(--background-primary), var(--background-secondary));
     
     margin: 0;
 }
 
 :root {
-    --brand-primary: #1890df;
-    --brand-secondary: #63daf3;
-    --brand-tertiary: #5ccdeb;
-    --brand-quarternary: #cafeff;
+    --brand-primary: #edfbfe;
+    --brand-secondary: #77d4f7;
+    --brand-tertiary: #bcf1fd;
 
     --text-primary: #b0bbc2;
     --text-secondary: #656f75;
     --text-tertiary: #0d5788;
     --text-quarternary: #4e6e83;
 
-    --background-primary: #00001f;
-    --background-secondary: #00002b;
-    --background-tertiary: #000041;
-    --background-quarternary: #00005c;
+    --background-primary: #002d68;
+    --background-secondary: #003f91;
+    --background-tertiary: #0050b9;
+    --background-quarternary: #0065e9;
 
-    --radius: 8px;
+    --radius: 12px;
+    --shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    --transition: 0.3s ease;
 }
 
 h1 span { font-size: 1.5em; }
@@ -44,7 +45,7 @@ h5 span { font-size: 0.67em; }
 h6 span { font-size: 0.45em; }
 
 ::-webkit-scrollbar { width: 7px; height: 5px; }
-::-webkit-scrollbar-track { background: var(--brand-quarternary); }
+::-webkit-scrollbar-track { background: var(--brand-tertiary); }
 ::-webkit-scrollbar-thumb { background: var(--brand-secondary); }
 ::-webkit-scrollbar-thumb:hover { background: var(--brand-primary); }
 
@@ -95,7 +96,7 @@ h6 span { font-size: 0.45em; }
 
 .flake_ui_button:not(button:disabled):hover,
 .flake_ui_button:not(button:disabled):focus {
-    background: var(--brand-quarternary);
+    background: var(--brand-tertiary);
     border-color: var(--brand-primary);
 }
 
@@ -216,7 +217,7 @@ h6 span { font-size: 0.45em; }
 
 .flake_ui_select:hover:not(:disabled),
 .flake_ui_select:focus-visible:not(:disabled) {
-    background-color: var(--brand-quarternary);
+    background-color: var(--brand-tertiary);
     border-color: var(--brand-primary);
 }
 
@@ -229,5 +230,5 @@ h6 span { font-size: 0.45em; }
 .flake_ui_select option {
     font-weight: normal;
     color: var(--text-tertiary);
-    background: var(--brand-quarternary);
+    background: var(--brand-tertiary);
 }
