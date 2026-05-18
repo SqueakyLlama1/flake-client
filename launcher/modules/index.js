@@ -3,13 +3,13 @@ import * as skins from './skin_grabber.js';
 
 load.init();
 async function testSkin() {
-    const skinURL = await skins.get('ashtonbashton78').then(result => {
+    const skinURL = await skins.get('turtlefopy').then(result => {
         if (result.error) {
             console.error("Error:", result.error);
             return;
         }
         return { url: result.skinUrl, uuid: result.uuid };
     });
-    skins.assemble(skinURL.url, skinURL.uuid, true);
+    skins.assemble(skinURL.url, skinURL.uuid, false);
 }
 testSkin();

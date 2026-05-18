@@ -45,9 +45,10 @@ h5 span { font-size: 0.67em; }
 h6 span { font-size: 0.45em; }
 
 ::-webkit-scrollbar { width: 7px; height: 5px; }
-::-webkit-scrollbar-track { background: var(--brand-tertiary); }
+::-webkit-scrollbar-track { background: var(--background-secondary); }
 ::-webkit-scrollbar-thumb { background: var(--brand-secondary); }
 ::-webkit-scrollbar-thumb:hover { background: var(--brand-primary); }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-thumb { border-top-right-radius: var(--radius); border-bottom-right-radius: var(--radius); }
 
 .hidden {
     display: none !important;
