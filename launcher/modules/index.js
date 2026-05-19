@@ -1,9 +1,10 @@
 import * as load from './load.js';
-import * as skins from './skin_grabber.js';
 
 load.init();
-async function testSkin() {
-    const skinURL = await skins.get('turtlefopy').then(result => {
+// Example skin loading functionality. Do not use yet, it's resource heavy
+
+/* async function testSkin() {
+    const skinURL = await skins.get('SqueakyLlama_').then(result => {
         if (result.error) {
             console.error("Error:", result.error);
             return;
@@ -12,4 +13,4 @@ async function testSkin() {
     });
     skins.assemble(skinURL.url, skinURL.uuid, false);
 }
-testSkin();
+testSkin(); */
