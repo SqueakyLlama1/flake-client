@@ -7,6 +7,8 @@ contextBridge.exposeInMainWorld('flakeAPI', {
     getAccounts: () => ipcRenderer.invoke('request-account-list'),
     triggerLogin: () => ipcRenderer.invoke('trigger-login'),
     signOut: (uuid) => ipcRenderer.invoke('sign-out', uuid),
+    openLogs: () => ipcRenderer.invoke('open-logs'),
+    requestSkin: (uuid, force) => ipcRenderer.invoke('request-skin', uuid, force),
 
     onAccountList: (callback) => ipcRenderer.on('account-list', (event, value) => callback(value)),
     onAccountInfo: (callback) => ipcRenderer.on('account-info', (event, value) => callback(value)),
@@ -14,5 +16,6 @@ contextBridge.exposeInMainWorld('flakeAPI', {
     onLog: (callback) => ipcRenderer.on('launcher-log', (event, value) => callback(value)),
     onClosed: (callback) => ipcRenderer.on('launcher-closed', (event, value) => callback(value)),
     onError: (callback) => ipcRenderer.on('launcher-error', (event, value) => callback(value)),
-    onPromptRequest: (callback) => ipcRenderer.on('trigger-login-prompt', (event, value) => callback(value))
+    onPromptRequest: (callback) => ipcRenderer.on('trigger-login-prompt', (event, value) => callback(value)),
+    onSkinLoaded: (callback) => ipcRenderer.on('skin-loaded', (event, value) => callback(value))
 });

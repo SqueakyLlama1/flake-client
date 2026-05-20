@@ -109,13 +109,10 @@
 
         background: color-mix(in srgb, var(--background-primary) 90%, transparent);
         border: 2px solid var(--background-secondary);
-        border-radius: var(--radius);
         box-shadow: var(--shadow);
 
         .main { 
-            flex: 1; 
-            display: flex; 
-            flex-direction: column; 
+            flex: 1;
         }
         
         .controls { 
@@ -124,22 +121,30 @@
         }
 
         flex: 1;
-        .controls button:first-child { border-top-left-radius: calc(var(--radius) - 2px); }
-        .controls button:last-child { border-bottom-left-radius: calc(var(--radius) - 2px); }
 
-        /* &:first-of-type {
-            flex: 0.6;
+        &:first-of-type {
             border-radius: var(--radius) 0 0 var(--radius);
             .controls button:first-child { border-top-left-radius: calc(var(--radius) - 2px); }
             .controls button:last-child { border-bottom-left-radius: calc(var(--radius) - 2px); }
         }
 
         &:last-of-type {
-            flex: 0.4;
             border-radius: 0 var(--radius) var(--radius) 0;
-            .controls button:first-child { border-top-right-radius: calc(var(--radius) - 2px); }
-            .controls button:last-child { border-bottom-right-radius: calc(var(--radius) - 2px); }
-        } */
+        }
+
+        .play-button {
+            cursor: pointer;
+            background: var(--background-secondary);
+
+            border: none;
+            border-radius: var(--radius);
+
+            color: var(--text-primary);
+            font-weight: bolder;
+            font-size: 1.5em;
+
+            padding: 0.4em;
+        }
     }
 }
 
@@ -169,7 +174,13 @@
         transition: fill var(--transition);
     }
 
-    &:hover {
+    &:disabled {
+        cursor: not-allowed;
+        color: var(--text-muted);
+        background: var(--background-primary);
+    }
+
+    &:not(&:disabled):hover {
         background: var(--background-tertiary);
         color: var(--brand-tertiary);
         svg { fill: var(--brand-tertiary); }
