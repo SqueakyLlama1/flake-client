@@ -5,6 +5,7 @@ body {
 
 #load_menu {
     height: 100%;
+    width: 100%;
     
     gap: 15px;
     
@@ -16,8 +17,8 @@ body {
 }
 
 #load_menu_title {
-    aspect-ratio: 2268 / 788;
-    max-width: 2268px;
+    aspect-ratio: 1019 / 142;
+    max-width: 1019px;
     width: 50%;
     height: auto;
 }

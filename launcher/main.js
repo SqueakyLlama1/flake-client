@@ -367,7 +367,7 @@ ipcMain.handle('request-skin', async (uuid, force) => {
     assembleSkin(uuid, force);
 });
 
-export async function assembleSkin(uuid, force) {
+async function assembleSkin(uuid, force) {
     const skin = getSkin(uuid);
     const outputPath = path.join("cache", "skins");
     console.log(`[SKINS, ASSEMBLE] Output Path: ${outputPath}`);
@@ -427,7 +427,7 @@ export async function assembleSkin(uuid, force) {
     return file;
 }
 
-export async function getSkin(username) {
+async function getSkin(username) {
     try {
         console.log(`[SKINS, GET] Searching for UUID for: ${username}...`);
         const uuidResponse = await axios.get(`https://api.mojang.com/users/profiles/minecraft/${username}`);
