@@ -191,3 +191,29 @@
         svg { fill: var(--brand-tertiary); }
     }
 }
+
+#player_skin_container {
+    img {
+        width: 50%;
+        aspect-ratio: 1 / 2;
+    }
+
+    .player_plate {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+
+        height: 100%;
+
+        background: var(--background-secondary);
+        border-radius: var(--radius);
+
+        margin: 5px;
+        padding: 10px;
+
+        .nameplate {
+            font-family: "Mojangles", "Arial", monospace;
+            color: var(--text-primary);
+        }
+    }
+}
