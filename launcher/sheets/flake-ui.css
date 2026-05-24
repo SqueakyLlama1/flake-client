@@ -36,6 +36,7 @@ body {
     --background-secondary: #003f91;
     --background-tertiary: #0050b9;
     --background-quarternary: #0065e9;
+    --background-quinary: #1b7eff;
     
     --radius: 12px;
     --shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
@@ -51,9 +52,8 @@ h6 span { font-size: 0.45em; }
 
 ::-webkit-scrollbar { width: 7px; height: 5px; }
 ::-webkit-scrollbar-track { background: var(--background-secondary); }
-::-webkit-scrollbar-thumb { background: var(--brand-secondary); }
-::-webkit-scrollbar-thumb:hover { background: var(--brand-primary); }
-::-webkit-scrollbar-track, ::-webkit-scrollbar-thumb { border-top-right-radius: var(--radius); border-bottom-right-radius: var(--radius); }
+::-webkit-scrollbar-thumb { background: var(--background-tertiary); }
+::-webkit-scrollbar-thumb:hover { background: var(--background-quarternary); }
 
 .hidden {
     display: none !important;

@@ -107,8 +107,12 @@
     display: flex;
     gap: 5px;
     
+    height: 14.5em;
+    
     .content {
         display: flex;
+        
+        height: 100%;
         
         background: color-mix(in srgb, var(--background-primary) 90%, transparent);
         border: 2px solid var(--background-secondary);
@@ -117,7 +121,7 @@
         .main { 
             flex: 1;
         }
-
+        
         flex: 1;
         
         .controls { 
@@ -174,7 +178,7 @@
             border-radius: 0 var(--radius) var(--radius) 0;
         }
         
-        .play-button {
+        .play_button {
             cursor: pointer;
             background: var(--background-secondary);
             
@@ -186,14 +190,14 @@
             font-size: 1.5em;
             
             padding: 0.4em 5.5em;
-
+            
             transition: background var(--transition), color var(--transition);
-
+            
             &:not(&:disabled):hover {
                 background: var(--background-tertiary);
                 color: var(--brand-tertiary);
             }
-
+            
             &:disabled {
                 background: var(--background-primary);
                 cursor: not-allowed;
@@ -231,15 +235,117 @@
 #account_list_container {
     display: flex;
     flex-direction: column;
+    gap: 5px;
+    
+    height: calc(100% - 10px);
+    overflow: auto;
+    
+    padding: 5px;
+    
+    button:not(.nameplate_controls button) {
+        display: flex;
+        flex-direction: row;
+
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        
+        background: var(--background-secondary);
+        border: none;
+        border-radius: var(--radius);
+        
+        color: var(--brand-primary);
+        font: bold 0.9rem sans-serif;
+        text-align: center;
+        
+        padding: 0 0.6rem;
+        cursor: pointer;
+        
+        transition: background var(--transition);
+        
+        svg { 
+            fill: var(--brand-primary); 
+            transition: fill var(--transition);
+        }
+        
+        &:hover {
+            background: var(--background-tertiary);
+            color: var(--brand-tertiary);
+            svg { fill: var(--brand-tertiary); }
+        }
+    }
     
     .nameplate {
         display: flex;
         flex-direction: row;
         
+        height: fit-content;
+        
         background: var(--background-secondary);
+        border-radius: var(--radius);
+        transition: background var(--transition), color var(--transition);
         
         &.selected, &:hover {
             background: var(--background-tertiary);
+            .nameplate_controls button {
+                background: var(--background-quarternary);
+            }
+        }
+        
+        .nameplate_content {
+            flex: 1;
+            padding: 5px;
+            
+            img {
+                height: 100%;
+                aspect-ratio: 1 / 1;
+                border-radius: var(--radius);
+            }
+            
+            span {
+                user-select: none;
+            }
+        }
+        
+        .nameplate_controls {
+            display: flex;
+            flex-direction: row;
+            
+            button {
+                height: 100%;
+                
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
+                
+                background: var(--background-tertiary);
+                border: none;
+                
+                color: var(--brand-primary);
+                font: bold 0.9rem sans-serif;
+                text-align: center;
+                
+                padding: 0 0.6rem;
+                cursor: pointer;
+                
+                transition: background var(--transition);
+                
+                svg { 
+                    fill: var(--brand-primary); 
+                    transition: fill var(--transition);
+                }
+                
+                &:hover {
+                    background: var(--background-quinary);
+                    color: var(--brand-tertiary);
+                    svg { fill: var(--brand-tertiary); }
+                }
+                
+                &:last-child {
+                    border-radius: 0 calc(var(--radius) - 2px) calc(var(--radius) - 2px) 0;
+                }
+            }
         }
     }
 }
