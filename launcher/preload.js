@@ -8,7 +8,7 @@ contextBridge.exposeInMainWorld('flakeAPI', {
     triggerLogin: () => ipcRenderer.invoke('trigger-login'),
     signOut: (uuid) => ipcRenderer.invoke('sign-out', uuid),
     openLogs: () => ipcRenderer.invoke('open-logs'),
-    requestSkin: (uuid, force) => ipcRenderer.invoke('request-skin', uuid, force),
+    requestSkin: (uuid, force, part = 'all') => ipcRenderer.invoke('request-skin', uuid, force, part),
     checkAuthServers: () => ipcRenderer.invoke('check-auth-servers'),
     getActiveAccount: () => ipcRenderer.invoke('get-active-account'),
 

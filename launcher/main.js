@@ -445,16 +445,17 @@ ipcMain.handle('launch-game', async (event, { version, isOffline }) => {
     }
 });
 
-ipcMain.handle('request-skin', async (_event, uuid, force) => {
+// IPC Handler updated to accept and pass 'part', defaulting to 'all'
+ipcMain.handle('request-skin', async (_event, uuid, force, part = 'all') => {
     try {
-        return await assembleSkin(uuid, force);
+        return await assembleSkin(uuid, force, part);
     } catch (err) {
         console.error(`IPC Handler error processing request-skin for target ${uuid}:`, err);
         return { error: err.message };
     }
 });
 
-async function assembleSkin(uuid, force) {
+async function assembleSkin(uuid, force, part = 'all') {
     try {
         const outputPath = path.join(getGamePath(), "cache", "skins");
         
@@ -489,35 +490,58 @@ async function assembleSkin(uuid, force) {
 
         const baseDataUrl = `data:image/png;base64,${rawSkinBuffer.toString('base64')}`;
 
-        console.log(`[SKINS, ASSEMBLE] Drawing skin asset profile layout context targets...`);
+        console.log(`[SKINS, ASSEMBLE] Drawing skin asset profile layout context targets for part: ${part}...`);
         const skinImage = await loadImage(rawSkinBuffer);
-        const canvas = createCanvas(16, 32);
-        const ctx = canvas.getContext('2d');
-        
-        const skinLayers = [
-            [8, 8, 8, 8, 4, 0, 8, 8],     
-            [40, 8, 8, 8, 4, 0, 8, 8],    
-            [20, 20, 8, 12, 4, 8, 8, 12],  
-            [20, 36, 8, 12, 4, 8, 8, 12],  
-            [44, 20, 4, 12, 0, 8, 4, 12],  
-            [44, 36, 4, 12, 0, 8, 4, 12],  
-            [36, 52, 4, 12, 12, 8, 4, 12], 
-            [52, 52, 4, 12, 12, 8, 4, 12], 
-            [4, 20, 4, 12, 4, 20, 4, 12],  
-            [4, 36, 4, 12, 4, 20, 4, 12],  
-            [20, 52, 4, 12, 8, 20, 4, 12], 
-            [4, 52, 4, 12, 8, 20, 4, 12]   
+
+        const allLayers = [
+            [8, 8, 8, 8, 4, 0, 8, 8],     // 0: Head Base
+            [40, 8, 8, 8, 4, 0, 8, 8],    // 1: Head Overlay
+            [20, 20, 8, 12, 4, 8, 8, 12],  // 2: Torso Base
+            [20, 36, 8, 12, 4, 8, 8, 12],  // 3: Torso Overlay
+            [44, 20, 4, 12, 0, 8, 4, 12],  // 4: Right Arm Base
+            [44, 36, 4, 12, 0, 8, 4, 12],  // 5: Right Arm Overlay
+            [36, 52, 4, 12, 12, 8, 4, 12], // 6: Left Arm Base
+            [52, 52, 4, 12, 12, 8, 4, 12], // 7: Left Arm Overlay
+            [4, 20, 4, 12, 4, 20, 4, 12],   // 8: Right Leg Base
+            [4, 36, 4, 12, 4, 20, 4, 12],   // 9: Right Leg Overlay
+            [20, 52, 4, 12, 8, 20, 4, 12], // 10: Left Leg Base
+            [4, 52, 4, 12, 8, 20, 4, 12]    // 11: Left Leg Overlay
         ];
 
-        skinLayers.forEach(layer => ctx.drawImage(skinImage, ...layer));
+        const configs = {
+            head:     { layers: [0, 1],     w: 8,  h: 8,  scale: 10 },
+            torso:    { layers: [2, 3],     w: 8,  h: 12, scale: 10 },
+            rightArm: { layers: [4, 5],     w: 4,  h: 12, scale: 10 },
+            leftArm:  { layers: [6, 7],     w: 4,  h: 12, scale: 10 },
+            rightLeg: { layers: [8, 9],     w: 4,  h: 12, scale: 10 },
+            leftLeg:  { layers: [10, 11],   w: 4,  h: 12, scale: 10 },
+            all:      { layers: [0,1,2,3,4,5,6,7,8,9,10,11], w: 16, h: 32, scale: 10 }
+        };
+
+        const config = configs[part] || configs.all;
+        const canvas = createCanvas(config.w, config.h);
+        const ctx = canvas.getContext('2d');
         
-        const finalCanvas = createCanvas(160, 320);
+        config.layers.forEach(index => {
+            const layer = [...allLayers[index]];
+            if (part !== 'all') {
+                layer[4] -= configs[part].layers.includes(index) ? allLayers[config.layers[0]][4] : 0;
+                layer[5] -= configs[part].layers.includes(index) ? allLayers[config.layers[0]][5] : 0;
+            }
+            
+            ctx.drawImage(skinImage, ...layer);
+        });
+        
+        const finalWidth = config.w * config.scale;
+        const finalHeight = config.h * config.scale;
+        
+        const finalCanvas = createCanvas(finalWidth, finalHeight);
         const finalCtx = finalCanvas.getContext('2d');
         finalCtx.imageSmoothingEnabled = false;
-        finalCtx.drawImage(canvas, 0, 0, 160, 320);
+        finalCtx.drawImage(canvas, 0, 0, finalWidth, finalHeight);
         
         return { 
-            assembled: finalCanvas.toDataURL('image/png'), 
+            assembled: finalCanvas.toDataURL('image/png'),
             base: baseDataUrl 
         };
 

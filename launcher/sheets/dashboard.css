@@ -37,7 +37,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-
+    
     height: 2.5rem;
     
     background: color-mix(in srgb, var(--background-primary) 90%, transparent);
@@ -55,7 +55,7 @@
     font-family: "Megrim", monospace;
     font-weight: bolder;
     font-size: 1.5em;
-
+    
     cursor: default;
     user-select: none;
 }
@@ -117,13 +117,52 @@
         .main { 
             flex: 1;
         }
+
+        flex: 1;
         
         .controls { 
             display: flex; 
-            flex-direction: column; 
+            flex-direction: column;
+            
+            button {
+                flex: 1;
+                aspect-ratio: 1 / 1;
+                
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
+                
+                background: var(--background-secondary);
+                border: none;
+                
+                color: var(--brand-primary);
+                font: bold 0.9rem sans-serif;
+                text-align: center;
+                
+                padding: 0 0.6rem;
+                cursor: pointer;
+                
+                svg { 
+                    fill: var(--brand-primary); 
+                    transition: fill var(--transition);
+                }
+                
+                &:disabled {
+                    cursor: not-allowed;
+                    color: var(--text-muted);
+                    background: var(--background-primary);
+                }
+                
+                &:not(&:disabled):hover {
+                    background: var(--background-tertiary);
+                    color: var(--brand-tertiary);
+                    svg { fill: var(--brand-tertiary); }
+                }
+            }
         }
-        
-        flex: 1;
         
         &:first-of-type {
             border-radius: var(--radius) 0 0 var(--radius);
@@ -142,52 +181,30 @@
             border: none;
             border-radius: var(--radius);
             
-            color: var(--text-primary);
+            color: var(--brand-primary);
             font-weight: bolder;
             font-size: 1.5em;
             
-            padding: 0.4em;
+            padding: 0.4em 5.5em;
+
+            transition: background var(--transition), color var(--transition);
+
+            &:not(&:disabled):hover {
+                background: var(--background-tertiary);
+                color: var(--brand-tertiary);
+            }
+
+            &:disabled {
+                background: var(--background-primary);
+                cursor: not-allowed;
+            }
         }
     }
 }
 
-.controls button {
-    flex: 1;
-    aspect-ratio: 1 / 1;
-    
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    
-    background: var(--background-secondary);
-    border: none;
-    
-    color: var(--brand-primary);
-    font: bold 0.9rem sans-serif;
-    text-align: center;
-    
-    padding: 0 0.6rem;
-    cursor: pointer;
-    
-    svg { 
-        fill: var(--brand-primary); 
-        transition: fill var(--transition);
-    }
-    
-    &:disabled {
-        cursor: not-allowed;
-        color: var(--text-muted);
-        background: var(--background-primary);
-    }
-    
-    &:not(&:disabled):hover {
-        background: var(--background-tertiary);
-        color: var(--brand-tertiary);
-        svg { fill: var(--brand-tertiary); }
-    }
+.nameplate {
+    font-family: "Mojangles", "Arial", monospace;
+    color: var(--text-primary);
 }
 
 #player_skin_container {
@@ -195,23 +212,34 @@
         width: 50%;
         aspect-ratio: 1 / 2;
     }
-
+    
     .player_plate {
         display: flex;
         flex-direction: column;
         gap: 5px;
-
+        
         height: 100%;
-
+        
         background: var(--background-secondary);
         border-radius: var(--radius);
-
+        
         margin: 5px;
         padding: 10px;
+    }
+}
 
-        .nameplate {
-            font-family: "Mojangles", "Arial", monospace;
-            color: var(--text-primary);
+#account_list_container {
+    display: flex;
+    flex-direction: column;
+    
+    .nameplate {
+        display: flex;
+        flex-direction: row;
+        
+        background: var(--background-secondary);
+        
+        &.selected, &:hover {
+            background: var(--background-tertiary);
         }
     }
 }
