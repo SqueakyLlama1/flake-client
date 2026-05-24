@@ -44,8 +44,6 @@ function createWindow() {
                     if (mainWindow && !mainWindow.isDestroyed()) {
                         mainWindow.webContents.send('prompt-initial-login');
                     }
-                } else {
-                    sendAccountInfo();
                 }
                 activeAccount.uuid = latestUUID;
                 activeAccount.username = getLatestUsername();

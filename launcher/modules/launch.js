@@ -12,20 +12,6 @@ export async function init() {
 
     logsButton.addEventListener('click', window.flakeAPI.openLogs);
     
-    window.flakeAPI.getLatestAccount();
-    window.flakeAPI.onAccountInfo((data) => {
-        if (!data.login) { console.log("Not logged in."); window.flakeAPI.triggerLogin(); return; }
-        console.log(`Logged in as: ${data.username}, with UUID: ${data.uuid}`);
-        window.flakeAPI.getAccounts();
-        window.flakeAPI.onAccountList((data) => {
-            if (data.length) {
-                console.log(`Logged in Users: ${JSON.stringify(data)}`);
-                return;
-            }
-            window.flakeAPI.triggerLogin();
-        });
-    });
-    
     window.flakeAPI.onClosed((code) => {
         launchBtn.disabled = false;
     });
@@ -40,10 +26,8 @@ export async function init() {
     launchBtn.addEventListener('click', async () => {
         launchBtn.disabled = true;
         
-        await wait(200);
         console.log(await window.flakeAPI.checkAuthServers());
         
-        // Securely pass values through the IPC bridge layer
         const response = await window.flakeAPI.triggerLaunch({
             version: '1.8.9',
             isOffline: isOffline

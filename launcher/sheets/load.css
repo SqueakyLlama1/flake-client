@@ -8,6 +8,8 @@ body {
     width: 100%;
     
     gap: 15px;
+
+    background: color-mix(in srgb, var(--background-primary) 50%, transparent);
     
     font-family: "Mojangles", Arial, Helvetica, monospace;
     color: var(--text-primary);
@@ -24,6 +26,7 @@ body {
 }
 
 #load_menu_copyright {
+    color: var(--text-tertiary);
     font-weight: bold;
     font-size: 0.8em;
     position: absolute;

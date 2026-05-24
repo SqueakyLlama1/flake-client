@@ -2,34 +2,41 @@
     position: fixed;
     top: 0;
     left: 0;
-
+    
     display: none;
-
+    
     overflow: auto;
-}
+    
+    .halfpane {
+        position: relative;
+        display: flex;
+        flex-direction: row;
+        
+        width: 100%;
+        height: 100%;
+        
+        .divider {
+            position: relative;
+            
+            width: 4px;
+            height: 100%;
+            
+            background: var(--brand-color);
+        }
+        
+        .left, .right {
+            flex: 0.5;
+            min-width: 0;
+        }
+    }
 
-.tab .halfpane {
-    position: relative;
-    display: flex;
-    flex-direction: row;
+    .previsible-flex {
+        display: flex;
+    }
 
-    width: 100%;
-    height: 100%;
-}
-
-.tab .halfpane .divider {
-    position: relative;
-
-    width: 4px;
-    height: 100%;
-
-    background: var(--brand-color);
-}
-
-.tab .halfpane .left,
-.tab .halfpane .right {
-    flex: 0.5;
-    min-width: 0;
+    .previsible-block {
+        display: block;
+    }
 }
 
 /* Animations */

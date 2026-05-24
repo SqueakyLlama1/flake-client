@@ -4,7 +4,6 @@ import * as dashboard from './dashboard.js';
 import * as tabs from './tabs.js';
 
 function getEBD(id) {return document.getElementById(id);}
-
 function wait(ms) {return new Promise(resolve => setTimeout(resolve, ms));}
 
 const menuDelay = visualSettings.menuDelay || 1250;
@@ -119,7 +118,6 @@ export function stopSnowEmitter() {
 
 export function init() {
     load_stylesheet = loadCSS('sheets/load.css');
-    tabs.show('load_menu', undefined, 'flex');
     startSnowEmitter(600, 1);
 }
 

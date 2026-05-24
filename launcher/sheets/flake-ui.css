@@ -17,7 +17,7 @@ html, body {
 }
 
 body {
-    background: linear-gradient(0deg, var(--background-primary), var(--background-secondary));
+    background: url('../assets/static_backdrop.png') center / cover;
     
     margin: 0;
 }
