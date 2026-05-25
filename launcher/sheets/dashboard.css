@@ -58,6 +58,10 @@
     
     cursor: default;
     user-select: none;
+
+    .logo {
+        height: 1.5rem;
+    }
 }
 
 .nav {
