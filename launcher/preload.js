@@ -12,7 +12,6 @@ contextBridge.exposeInMainWorld('flakeAPI', {
     checkAuthServers: () => ipcRenderer.invoke('check-auth-servers'),
     getActiveAccount: () => ipcRenderer.invoke('get-active-account'),
 
-    onAccountList: (callback) => ipcRenderer.on('account-list', (event, value) => callback(value)),
     onAccountInfo: (callback) => ipcRenderer.on('account-info', (event, value) => callback(value)),
     onProgress: (callback) => ipcRenderer.on('launcher-progress', (event, value) => callback(value)),
     onLog: (callback) => ipcRenderer.on('launcher-log', (event, value) => callback(value)),

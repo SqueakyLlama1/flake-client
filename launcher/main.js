@@ -92,7 +92,7 @@ function getAccountsPath() {
 function setLatestAccount(uuid) {
     try {
         fs.writeFileSync(path.join(getAccountsPath(), "latest.txt"), uuid || "none", 'utf8');
-        activeAccount.uuid = uuid;
+        activeAccount.uuid = uuid || "none";
         activeAccount.username = getLatestUsername();
     } catch (err) {
         console.error("Failed writing changes to latest.txt configuration payload:", err);
@@ -286,10 +286,6 @@ ipcMain.handle('request-account-list', async () => {
             return list;
         }, []);
         
-        if (mainWindow && !mainWindow.isDestroyed()) {
-            mainWindow.webContents.send('account-list', accountList);
-        }
-        
         return accountList;
     } catch (error) {
         console.error("Failed to retrieve account list:", error);
@@ -323,129 +319,102 @@ ipcMain.handle('launch-game', async (event, { version, isOffline }) => {
     try {
         const launcher = new Launch();
         const gamePath = getGamePath();
-        const accountsPath = getAccountsPath();
-        let UUID = getLatestAccount();
-        
+        const UUID = getLatestAccount();
+
         launcher.on('progress', (progress, size) => {
-            try {
-                if (!mainWindow?.isDestroyed()) {
-                    mainWindow.webContents.send('launcher-progress', ((progress / size) * 100).toFixed(2));
-                }
-            } catch (err) {
-                console.error("Error signaling client rendering progress changes downstream:", err);
+            if (!mainWindow?.isDestroyed()) {
+                mainWindow.webContents.send('launcher-progress', ((progress / size) * 100).toFixed(2));
             }
         });
         launcher.on('patch', (patch) => {
-            try {
-                if (!logWindow?.isDestroyed()) logWindow.webContents.send('launcher-log', patch);
-            } catch (err) {
-                console.error("Error tracking runtime logs context on path configurations:", err);
-            }
+            if (!logWindow?.isDestroyed()) logWindow.webContents.send('launcher-log', patch);
         });
         launcher.on('data', (rawLog) => {
-            try {
-                if (!logWindow?.isDestroyed()) logWindow.webContents.send('launcher-log', rawLog);
-            } catch (err) {
-                console.error("Error displaying incoming data pipeline logs:", err);
-            }
+            if (!logWindow?.isDestroyed()) logWindow.webContents.send('launcher-log', rawLog);
         });
         launcher.on('close', (code) => {
-            try {
-                if (!mainWindow?.isDestroyed()) mainWindow.webContents.send('launcher-closed', code);
-            } catch (err) {
-                console.error("Error monitoring shutdown cycle callbacks:", err);
-            }
+            if (!mainWindow?.isDestroyed()) mainWindow.webContents.send('launcher-closed', code);
         });
         launcher.on('error', (err) => {
-            try {
-                if (!mainWindow?.isDestroyed()) mainWindow.webContents.send('launcher-error', err ? err.message : "Unknown context error");
-            } catch (errorContext) {
-                console.error("Error handling internal dynamic runner runtime faults:", errorContext);
-            }
+            if (!mainWindow?.isDestroyed()) mainWindow.webContents.send('launcher-error', err ? err.message : "Unknown context error");
         });
-        
-        let authAccount;
-        const msAuthenticator = new Microsoft();
-        
-        if (isOffline) {
-            let offlineUsername = 'FlakeTester';
-            if (UUID !== "none") {
-                const accountPath = getAccountFilePath(UUID);
-                try {
-                    if (fs.existsSync(accountPath)) {
-                        offlineUsername = JSON.parse(fs.readFileSync(accountPath, 'utf-8')).name ?? offlineUsername;
-                    }
-                } catch (readProfileErr) {
-                    console.error("Error mapping fallback offline credentials, continuing with baseline fallback names:", readProfileErr);
-                }
+
+        if (UUID === "none") {
+            if (isOffline) {
+                throw new Error("No cached account found. You must log in online at least once before playing offline.");
             }
-            
+            const msAuthenticator = new Microsoft();
+            const authAccount = await msAuthenticator.getAuth();
+            saveAccountFile(authAccount);
+            setLatestAccount(authAccount.uuid);
+            sendAccountInfo();
+
+            return launchWithProfile(launcher, gamePath, version, authAccount);
+        }
+
+        const accountPath = getAccountFilePath(UUID);
+        if (!fs.existsSync(accountPath)) {
+            throw new Error("Account profile data missing. Please log in again.");
+        }
+
+        let savedProfile;
+        try {
+            savedProfile = JSON.parse(fs.readFileSync(accountPath, 'utf-8'));
+        } catch (err) {
+            if (isOffline) throw new Error("Cached account file is corrupted. Cannot launch offline.");
+            console.error("Corrupted authentication profile, forcing re-auth:", err);
+        }
+
+        let authAccount;
+        if (isOffline) {
             authAccount = {
-                name: offlineUsername,
-                user_properties: '{}',
-                access_token: 'null',
-                uuid: '00000000-0000-0000-0000-000000000000', 
-                meta: { type: 'mojang', demo: false }
+                name: savedProfile?.name || savedProfile?.username || "Player",
+                user_properties: savedProfile?.user_properties || '{}',
+                access_token: '',
+                uuid: UUID,
+                meta: savedProfile?.meta || { type: 'mojang', demo: false }
             };
         } else {
-            if (UUID === "none") {
-                authAccount = await msAuthenticator.getAuth();
-                saveAccountFile(authAccount);
-                setLatestAccount(authAccount.uuid);
-                sendAccountInfo();
-            } else {
-                const accountPath = getAccountFilePath(UUID);
-                if (fs.existsSync(accountPath)) {
-                    let savedProfile;
-                    try {
-                        savedProfile = JSON.parse(fs.readFileSync(accountPath, 'utf-8'));
-                    } catch (err) {
-                        console.error("Corrupted authentication configuration structure detected, forcing full re-auth state:", err);
-                    }
-                    
-                    if (savedProfile) {
-                        try {
-                            authAccount = await msAuthenticator.refresh(savedProfile);
-                            if (authAccount.error) throw new Error("Invalid token payload");
-                            saveAccountFile(authAccount);
-                        } catch {
-                            authAccount = await msAuthenticator.getAuth(); 
-                            saveAccountFile(authAccount);
-                            setLatestAccount(authAccount.uuid);
-                            sendAccountInfo();
-                        }
-                    } else {
-                        authAccount = await msAuthenticator.getAuth(); 
-                        saveAccountFile(authAccount);
-                        setLatestAccount(authAccount.uuid);
-                        sendAccountInfo();
-                    }
-                } else {
+            const msAuthenticator = new Microsoft();
+            if (savedProfile) {
+                try {
+                    authAccount = await msAuthenticator.refresh(savedProfile);
+                    if (authAccount.error) throw new Error("Invalid token payload");
+                    saveAccountFile(authAccount);
+                } catch {
                     authAccount = await msAuthenticator.getAuth(); 
                     saveAccountFile(authAccount);
                     setLatestAccount(authAccount.uuid);
                     sendAccountInfo();
                 }
+            } else {
+                authAccount = await msAuthenticator.getAuth(); 
+                saveAccountFile(authAccount);
+                setLatestAccount(authAccount.uuid);
+                sendAccountInfo();
             }
         }
-        
-        launcher.Launch({
-            path: gamePath,
-            version,
-            authenticator: authAccount,
-            intelEnabledMac: true,
-            memory: { min: '2G', max: '4G' },
-            loader: { enable: true, type: 'forge', build: 'latest' }
-        });
-        
-        return { success: true };
+
+        return launchWithProfile(launcher, gamePath, version, authAccount);
+
     } catch (error) {
-        console.error("IPC Handler engine initialization issue tracking inside 'launch-game' process map:", error);
+        console.error("Launch handler initialization failure:", error);
         return { success: false, error: error.message };
     }
 });
 
-// IPC Handler updated to accept and pass 'part', defaulting to 'all'
+function launchWithProfile(launcher, gamePath, version, authAccount) {
+    launcher.Launch({
+        path: gamePath,
+        version,
+        authenticator: authAccount,
+        intelEnabledMac: true,
+        memory: { min: '2G', max: '4G' },
+        loader: { enable: true, type: 'forge', build: 'latest' }
+    });
+    return { success: true };
+}
+
 ipcMain.handle('request-skin', async (_event, uuid, force, part = 'all') => {
     try {
         return await assembleSkin(uuid, force, part);
