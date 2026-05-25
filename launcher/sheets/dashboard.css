@@ -31,21 +31,37 @@
     
     margin: 10px;
     padding: 5px;
-}
+    
+    .heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        
+        height: 2.5rem;
+        
+        background: color-mix(in srgb, var(--background-primary) 90%, transparent);
+        border: 2px solid var(--background-secondary);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        
+        padding-left: calc(var(--radius) / 2);
+    }
+    
+    .footer {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
 
-.dashboard_heading {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    
-    height: 2.5rem;
-    
-    background: color-mix(in srgb, var(--background-primary) 90%, transparent);
-    border: 2px solid var(--background-secondary);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    
-    padding-left: calc(var(--radius) / 2);
+        height: 2.5rem;
+        width: 100%;
+
+        font-family: "Mojangles", Arial, monospace;
+
+        background: var(--background-secondary);
+        border-radius: calc(var(--radius) - 2px);
+
+        margin-top: auto;
+    }
 }
 
 .logo_container {
@@ -58,7 +74,7 @@
     
     cursor: default;
     user-select: none;
-
+    
     .logo {
         height: 1.5rem;
     }
@@ -121,7 +137,7 @@
         background: color-mix(in srgb, var(--background-primary) 90%, transparent);
         border: 2px solid var(--background-secondary);
         box-shadow: var(--shadow);
-
+        
         overflow: auto;
         
         .main { 
@@ -222,7 +238,7 @@
 #player_skin_container {
     display: flex;
     flex-direction: column;
-
+    
     img {
         width: 50%;
         aspect-ratio: 1 / 2;
@@ -232,7 +248,7 @@
         .center {
             gap: 5px;
         }
-
+        
         flex: 1;
         
         background: var(--background-secondary);
@@ -306,7 +322,7 @@
         .nameplate_content {
             display: flex;
             flex-direction: row;
-
+            
             padding: 5px;
             
             img {
@@ -326,12 +342,12 @@
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-
+                
                 background: var(--background-tertiary);
                 border-radius: 0 calc(var(--radius) - 2px) 0 0;
-
+                
                 color: var(--brand-primary);
-
+                
                 user-select: none;
             }
             

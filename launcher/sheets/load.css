@@ -26,7 +26,7 @@ body {
 }
 
 #load_menu_copyright {
-    color: var(--text-tertiary);
+    color: var(--text-primary);
     font-weight: bold;
     font-size: 0.8em;
     position: absolute;
