@@ -51,15 +51,15 @@
         display: inline-flex;
         justify-content: center;
         align-items: center;
-
+        
         height: 2.5rem;
         width: 100%;
-
+        
         font-family: "Mojangles", Arial, monospace;
-
+        
         background: var(--background-secondary);
         border-radius: calc(var(--radius) - 2px);
-
+        
         margin-top: auto;
     }
 }
@@ -201,8 +201,27 @@
         &:last-of-type {
             border-radius: 0 var(--radius) var(--radius) 0;
         }
+
+        .center {
+            gap: 5px;
+        }
         
-        .play_button {
+        #launcher_progress {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            max-width: 75%;
+            height: 1.5em;
+            
+            border-radius: calc(var(--radius) - 2px);
+            
+            background: var(--background-tertiary);
+        }
+        
+        #play_button {
+            position: relative;
+            
             cursor: pointer;
             background: var(--background-secondary);
             

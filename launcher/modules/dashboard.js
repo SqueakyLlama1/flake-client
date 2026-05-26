@@ -33,7 +33,7 @@ export async function init() {
 }
 
 async function refreshSkinPreview(force) {
-    await wait(200);
+    await wait(50);
     loadSkinPreview(force);
 }
 
@@ -50,7 +50,7 @@ async function loadSkinPreview(force) {
     
     try {
         const activeAccountPromise = window.flakeAPI.getActiveAccount();
-        const delayPromise = wait(200);
+        const delayPromise = wait(50);
         
         const [activeAccount] = await Promise.all([activeAccountPromise, delayPromise]);
         
@@ -133,7 +133,7 @@ async function populateAccountList() {
     `;
     
     if (!accounts || accounts.length === 0) {
-        await wait(200);
+        await wait(50);
         playerListContainer.innerHTML = `
             <div class="center">
                 <span>No accounts currently logged in.</span>
@@ -144,7 +144,7 @@ async function populateAccountList() {
     
     try {
         const activeAccountPromise = window.flakeAPI.getActiveAccount();
-        const delayPromise = wait(200);
+        const delayPromise = wait(50);
         
         const [activeAccount] = await Promise.all([activeAccountPromise, delayPromise]);
         

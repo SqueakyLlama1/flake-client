@@ -315,12 +315,13 @@ ipcMain.handle('open-logs', async () => {
     }
 });
 
-ipcMain.handle('launch-game', async (event, { version, isOffline }) => {
+ipcMain.handle('launch-game', async (event, { version }) => {
+    let isOffline = await checkAuthServer();
     try {
         const launcher = new Launch();
         const gamePath = getGamePath();
         const UUID = getLatestAccount();
-
+        
         launcher.on('progress', (progress, size) => {
             if (!mainWindow?.isDestroyed()) {
                 mainWindow.webContents.send('launcher-progress', ((progress / size) * 100).toFixed(2));
@@ -330,7 +331,11 @@ ipcMain.handle('launch-game', async (event, { version, isOffline }) => {
             if (!logWindow?.isDestroyed()) logWindow.webContents.send('launcher-log', patch);
         });
         launcher.on('data', (rawLog) => {
-            if (!logWindow?.isDestroyed()) logWindow.webContents.send('launcher-log', rawLog);
+            if (!logWindow?.isDestroyed()) {
+                try {
+                    logWindow.webContents.send('launcher-log', rawLog);
+                } catch {}
+            }
         });
         launcher.on('close', (code) => {
             if (!mainWindow?.isDestroyed()) mainWindow.webContents.send('launcher-closed', code);
@@ -338,7 +343,7 @@ ipcMain.handle('launch-game', async (event, { version, isOffline }) => {
         launcher.on('error', (err) => {
             if (!mainWindow?.isDestroyed()) mainWindow.webContents.send('launcher-error', err ? err.message : "Unknown context error");
         });
-
+        
         if (UUID === "none") {
             if (isOffline) {
                 throw new Error("No cached account found. You must log in online at least once before playing offline.");
@@ -348,15 +353,15 @@ ipcMain.handle('launch-game', async (event, { version, isOffline }) => {
             saveAccountFile(authAccount);
             setLatestAccount(authAccount.uuid);
             sendAccountInfo();
-
+            
             return launchWithProfile(launcher, gamePath, version, authAccount);
         }
-
+        
         const accountPath = getAccountFilePath(UUID);
         if (!fs.existsSync(accountPath)) {
             throw new Error("Account profile data missing. Please log in again.");
         }
-
+        
         let savedProfile;
         try {
             savedProfile = JSON.parse(fs.readFileSync(accountPath, 'utf-8'));
@@ -364,7 +369,7 @@ ipcMain.handle('launch-game', async (event, { version, isOffline }) => {
             if (isOffline) throw new Error("Cached account file is corrupted. Cannot launch offline.");
             console.error("Corrupted authentication profile, forcing re-auth:", err);
         }
-
+        
         let authAccount;
         if (isOffline) {
             authAccount = {
@@ -394,9 +399,9 @@ ipcMain.handle('launch-game', async (event, { version, isOffline }) => {
                 sendAccountInfo();
             }
         }
-
+        
         return launchWithProfile(launcher, gamePath, version, authAccount);
-
+        
     } catch (error) {
         console.error("Launch handler initialization failure:", error);
         return { success: false, error: error.message };
@@ -433,10 +438,10 @@ async function assembleSkin(uuid, force, part = 'all') {
         } catch (dirErr) {
             console.error("Failed creating nested cache folders maps for skins operations:", dirErr);
         }
-
+        
         const rawCacheFile = path.join(outputPath, `${uuid}_raw.png`);
         let rawSkinBuffer;
-
+        
         if (fs.existsSync(rawCacheFile) && !force) {
             console.log(`[SKINS] Loading raw skin from offline cache for ${uuid}`);
             rawSkinBuffer = fs.readFileSync(rawCacheFile);
@@ -453,15 +458,15 @@ async function assembleSkin(uuid, force, part = 'all') {
                 const response = await axios.get(skin, { responseType: 'arraybuffer' });
                 rawSkinBuffer = Buffer.from(response.data);
             }
-
+            
             fs.writeFileSync(rawCacheFile, rawSkinBuffer);
         }
-
+        
         const baseDataUrl = `data:image/png;base64,${rawSkinBuffer.toString('base64')}`;
-
+        
         console.log(`[SKINS, ASSEMBLE] Drawing skin asset profile layout context targets for part: ${part}...`);
         const skinImage = await loadImage(rawSkinBuffer);
-
+        
         const allLayers = [
             [8, 8, 8, 8, 4, 0, 8, 8],     // 0: Head Base
             [40, 8, 8, 8, 4, 0, 8, 8],    // 1: Head Overlay
@@ -476,7 +481,7 @@ async function assembleSkin(uuid, force, part = 'all') {
             [20, 52, 4, 12, 8, 20, 4, 12], // 10: Left Leg Base
             [4, 52, 4, 12, 8, 20, 4, 12]    // 11: Left Leg Overlay
         ];
-
+        
         const configs = {
             head:     { layers: [0, 1],     w: 8,  h: 8,  scale: 10 },
             torso:    { layers: [2, 3],     w: 8,  h: 12, scale: 10 },
@@ -486,7 +491,7 @@ async function assembleSkin(uuid, force, part = 'all') {
             leftLeg:  { layers: [10, 11],   w: 4,  h: 12, scale: 10 },
             all:      { layers: [0,1,2,3,4,5,6,7,8,9,10,11], w: 16, h: 32, scale: 10 }
         };
-
+        
         const config = configs[part] || configs.all;
         const canvas = createCanvas(config.w, config.h);
         const ctx = canvas.getContext('2d');
@@ -513,7 +518,7 @@ async function assembleSkin(uuid, force, part = 'all') {
             assembled: finalCanvas.toDataURL('image/png'),
             base: baseDataUrl 
         };
-
+        
     } catch (err) {
         console.error(`Failed complete skin structural aggregation steps for targeting identity ${uuid}:`, err);
         return "";

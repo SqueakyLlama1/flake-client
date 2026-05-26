@@ -2,35 +2,47 @@ function getEBD(id) { return document.getElementById(id); }
 function wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
 export async function init() {
-    const launchBtn = getEBD('game-launch');
-    const logsButton = getEBD('game-logs');
+    const playBtn = getEBD('play_button');
+    const logsButton = getEBD('logs_button');
+    const launcherProgress = getEBD('launcher_progress');
     
-    if (!launchBtn || !logsButton) {
+    if (!playBtn || !logsButton) {
         console.error("FlakeClient Module Error: DOM elements could not be found.");
         return;
     }
-
+    
     logsButton.addEventListener('click', window.flakeAPI.openLogs);
     
     window.flakeAPI.onClosed((code) => {
-        launchBtn.disabled = false;
+        playBtn.textContent = "PLAY";
+        playBtn.disabled = false;
     });
     
     window.flakeAPI.onError((errMessage) => {
-        launchBtn.disabled = false;
+        playBtn.textContent = "PLAY";
+        playBtn.disabled = false;
     });
-
-    let isOffline = await !window.flakeAPI.checkAuthServers();
+    
+    window.flakeAPI.onProgress((percentage) => {
+        if (percentage >= 100) {
+            launcherProgress.classList.add('hidden');
+            playBtn.textContent = "LAUNCHED";
+            percentage = 0;
+            return;
+        };
+        launcherProgress.classList.remove('hidden');
+        playBtn.textContent = "INSTALLING";
+        launcherProgress.textContent = `${percentage}%`;
+        launcherProgress.style.width = `${percentage}%`;
+    });
     
     // --- Interaction Hook ---
-    launchBtn.addEventListener('click', async () => {
-        launchBtn.disabled = true;
-        
-        console.log(await window.flakeAPI.checkAuthServers());
+    playBtn.addEventListener('click', async () => {
+        playBtn.disabled = true;
+        playBtn.textContent = "LAUNCHED";
         
         const response = await window.flakeAPI.triggerLaunch({
-            version: '1.8.9',
-            isOffline: isOffline
+            version: '1.8.9'
         });
     });
 }
