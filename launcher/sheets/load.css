@@ -3,6 +3,10 @@ body {
     overflow: hidden;
 }
 
+.still_loading {
+    display: none;
+}
+
 #load_menu {
     height: 100%;
     width: 100%;

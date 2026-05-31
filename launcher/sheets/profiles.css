@@ -1,0 +1,7 @@
+#profiles {
+    display: flex;
+}
+
+.still_loading {
+    display: none;
+}

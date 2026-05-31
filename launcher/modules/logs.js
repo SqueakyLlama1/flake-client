@@ -26,8 +26,7 @@ window.flakeAPI.onLog((data) => {
     
     if (isAtBottom) {
         window.scrollTo({
-            top: html.scrollHeight,
-            behavior: 'smooth'
+            top: html.scrollHeight
         });
     }
 });

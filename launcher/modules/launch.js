@@ -3,15 +3,12 @@ function wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
 export async function init() {
     const playBtn = getEBD('play_button');
-    const logsButton = getEBD('logs_button');
     const launcherProgress = getEBD('launcher_progress');
-    
-    if (!playBtn || !logsButton) {
+
+    if (!playBtn || !launcherProgress) {
         console.error("FlakeClient Module Error: DOM elements could not be found.");
         return;
     }
-    
-    logsButton.addEventListener('click', window.flakeAPI.openLogs);
     
     window.flakeAPI.onClosed((code) => {
         playBtn.textContent = "PLAY";
@@ -21,6 +18,7 @@ export async function init() {
     window.flakeAPI.onError((errMessage) => {
         playBtn.textContent = "PLAY";
         playBtn.disabled = false;
+        console.error(errMessage);
     });
     
     window.flakeAPI.onProgress((percentage) => {

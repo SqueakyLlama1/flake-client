@@ -1,0 +1,20 @@
+:root {
+    --brand-primary: #10b981;
+    --brand-secondary: #8b5cf6;
+    --brand-tertiary: #f43f5e;
+    
+    --text-primary: #f8fafc;
+    --text-secondary: #64748b;
+    --text-tertiary: #0f172a;
+    --text-quarternary: #475569;
+    
+    --background-primary: #0f172a;
+    --background-secondary: #1e293b;
+    --background-tertiary: #334155;
+    --background-quarternary: #475569;
+    --background-quinary: #10b981;
+    
+    --radius: 6px;
+    --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+    --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}

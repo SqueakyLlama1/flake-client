@@ -1,10 +1,11 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, ipcRenderer } = require('electron');
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
 const axios = require('axios');
 const { createCanvas, loadImage } = require('canvas');
 const { Launch, Microsoft } = require('minecraft-java-core');
+const { start } = require('repl');
 
 let mainWindow;
 let logWindow;
@@ -303,7 +304,7 @@ ipcMain.handle('open-logs', async () => {
         logWindow.on('closed', () => { logWindow = null; });
         logWindow.webContents.on('did-finish-load', () => {
             try {
-                if (logWindow && !logWindow.isDestroyed()) {
+                if (logWindow && !logWindow.isDestroyed() && logWindow.webContents) {
                     logWindow.webContents.send('launcher-log', 'Log window initialized and listening...');
                 }
             } catch (err) {
@@ -316,8 +317,9 @@ ipcMain.handle('open-logs', async () => {
 });
 
 ipcMain.handle('launch-game', async (event, { version }) => {
-    let isOffline = await checkAuthServer();
     try {
+        const isOffline = !await checkAuthServer();
+        
         const launcher = new Launch();
         const gamePath = getGamePath();
         const UUID = getLatestAccount();
@@ -328,13 +330,11 @@ ipcMain.handle('launch-game', async (event, { version }) => {
             }
         });
         launcher.on('patch', (patch) => {
-            if (!logWindow?.isDestroyed()) logWindow.webContents.send('launcher-log', patch);
+            if (logWindow && !logWindow.isDestroyed() && logWindow.webContents) logWindow.webContents.send('launcher-log', patch);
         });
         launcher.on('data', (rawLog) => {
-            if (!logWindow?.isDestroyed()) {
-                try {
-                    logWindow.webContents.send('launcher-log', rawLog);
-                } catch {}
+            if (logWindow && !logWindow.isDestroyed() && logWindow.webContents) {
+                logWindow.webContents.send('launcher-log', rawLog);
             }
         });
         launcher.on('close', (code) => {

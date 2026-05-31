@@ -22,27 +22,6 @@ body {
     margin: 0;
 }
 
-:root {
-    --brand-primary: #edfbfe;
-    --brand-secondary: #77d4f7;
-    --brand-tertiary: #bcf1fd;
-    
-    --text-primary: #b0bbc2;
-    --text-secondary: #656f75;
-    --text-tertiary: #0d5788;
-    --text-quarternary: #4e6e83;
-    
-    --background-primary: #002d68;
-    --background-secondary: #003f91;
-    --background-tertiary: #0050b9;
-    --background-quarternary: #0065e9;
-    --background-quinary: #388eff;
-    
-    --radius: 12px;
-    --shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-    --transition: 0.3s ease;
-}
-
 h1 span { font-size: 1.5em; }
 h2 span { font-size: 1.17em; }
 h3 span { font-size: 1em; }

@@ -1,0 +1,20 @@
+:root {
+    --brand-primary: #ff4d4d;
+    --brand-secondary: #ff9f1c;
+    --brand-tertiary: #ffd166;
+    
+    --text-primary: #f8f9fa;
+    --text-secondary: #9aa0a6;
+    --text-tertiary: #1a0b00;
+    --text-quarternary: #5c2d00;
+    
+    --background-primary: #121214;
+    --background-secondary: #1a1a1e;
+    --background-tertiary: #26262b;
+    --background-quarternary: #3a3a42;
+    --background-quinary: #ff4d4d;
+    
+    --radius: 6px;
+    --shadow: 0 4px 15px rgba(255, 77, 77, 0.15);
+    --transition: 0.15s ease-out;
+}
