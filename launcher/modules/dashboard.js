@@ -25,7 +25,8 @@ let playerBaseSkin;
 const LOGOUT_ICON = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#1f1f1f"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/></svg>`;
 const SWITCH_ICON = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#1f1f1f"><path d="m482-200 114-113-114-113-42 42 43 43q-28 1-54.5-9T381-381q-20-20-30.5-46T340-479q0-17 4.5-34t12.5-33l-44-44q-17 25-25 53t-8 57q0 38 15 75t44 66q29 29 65 43.5t74 15.5l-38 38 42 42Zm165-170q17-25 25-53t8-57q0-38-14.5-75.5T622-622q-29-29-65.5-43T482-679l38-39-42-42-114 113 114 113 42-42-44-44q27 0 55 10.5t48 30.5q20 20 30.5 46t10.5 52q0 17-4.5 34T603-414l44 44ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>`;
 
-const handleSkinReset = () => refreshSkinPreview(true);
+const handleSkinReset = () => loadSkinPreview(true, true);
+const handleSkinRefresh = () => loadSkinPreview(false, true);
 const handleProfilesRedirect = () => { tabs.goto('profiles') };
 const handleAccountLogin = () => window.flakeAPI.triggerLogin();
 
@@ -36,7 +37,7 @@ export async function init() {
     appQuitBtn.addEventListener('click', () => {window.close()});
     appReloadBtn.addEventListener('click', () => {window.location.reload()});
     skinDownloadBtn.addEventListener('click', downloadSkin);
-    skinRefreshBtn.addEventListener('click', refreshSkinPreview);
+    skinRefreshBtn.addEventListener('click', handleSkinRefresh);
     skinResetBtn.addEventListener('click', handleSkinReset);
     profilesBtn.addEventListener('click', handleProfilesRedirect);
     accountListAdd.addEventListener('click', handleAccountLogin);
@@ -48,12 +49,7 @@ export async function init() {
     populateAccountList();
 }
 
-async function refreshSkinPreview(force) {
-    await wait(50);
-    loadSkinPreview(force);
-}
-
-async function loadSkinPreview(force) {
+async function loadSkinPreview(force, addDelay = false) {
     const skinContainer = getEBD('player_skin_container');
     
     skinContainer.innerHTML = `
@@ -62,10 +58,11 @@ async function loadSkinPreview(force) {
         </div>
     `;
     
+    if (addDelay) await wait(50);
+    
     try {
         const [activeAccount] = await Promise.all([
-            window.flakeAPI.getActiveAccount(),
-            wait(50)
+            window.flakeAPI.getActiveAccount()
         ]);
         
         if (!activeAccount || activeAccount.uuid === 'none') {
@@ -80,27 +77,16 @@ async function loadSkinPreview(force) {
         const playerSkin = await window.flakeAPI.requestSkin(activeAccount.uuid, force);
         playerBaseSkin = playerSkin.base;
         
-        const fragment = document.createDocumentFragment();
+        const assembledSkinPreview = `
+            <div class="preview_container">
+                <div class="center">
+                    <span class="nameplate">${activeAccount.username}</span>
+                    <img src="${playerSkin.assembled}"></img>
+                </div>
+            </div>
+        `;
         
-        const imageElementContainer = document.createElement('div');
-        imageElementContainer.className = 'player_plate';
-        
-        const centerLayoutElement = document.createElement('div');
-        centerLayoutElement.className = 'center';
-        
-        const nameplateElement = document.createElement('span');
-        nameplateElement.className = 'nameplate';
-        nameplateElement.textContent = activeAccount.username;
-        
-        const imageElement = document.createElement('img');
-        imageElement.src = playerSkin.assembled;
-        
-        centerLayoutElement.appendChild(nameplateElement);
-        centerLayoutElement.appendChild(imageElement);
-        imageElementContainer.appendChild(centerLayoutElement);
-        fragment.appendChild(imageElementContainer);
-        
-        skinContainer.replaceChildren(fragment);
+        skinContainer.innerHTML = assembledSkinPreview;
     } catch (error) {
         console.error("Failed to load skin preview:", error);
         skinContainer.innerHTML = '<div class="error">Failed to load skin preview.</div>';
@@ -181,7 +167,7 @@ async function populateAccountList() {
         logoutAllBtn.addEventListener('click', async () => {
             await window.flakeAPI.signOut('all');
             populateAccountList();
-            refreshSkinPreview();
+            loadSkinPreview();
         });
         fragment.appendChild(logoutAllBtn);
         
@@ -241,6 +227,6 @@ window.flakeAPI.onAccountInfo((data) => {
         return; 
     }
     console.log(`Logged in as: ${data.username}, with UUID: ${data.uuid}`);
-    refreshSkinPreview();
+    loadSkinPreview();
     populateAccountList(data);
 });

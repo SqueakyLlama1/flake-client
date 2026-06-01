@@ -36,6 +36,23 @@
         box-shadow: var(--shadow);
         
         padding-left: calc(var(--radius) / 2);
+        
+        
+        .logo_container {
+            display: flex;
+            align-items: center;
+            
+            font-family: "Megrim", monospace;
+            font-weight: bolder;
+            font-size: 1.5em;
+            
+            cursor: default;
+            user-select: none;
+            
+            .logo {
+                height: 1.5rem;
+            }
+        }
     }
     
     .footer {
@@ -52,22 +69,6 @@
         border-radius: calc(var(--radius) - 2px);
         
         margin-top: auto;
-    }
-}
-
-.logo_container {
-    display: flex;
-    align-items: center;
-    
-    font-family: "Megrim", monospace;
-    font-weight: bolder;
-    font-size: 1.5em;
-    
-    cursor: default;
-    user-select: none;
-    
-    .logo {
-        height: 1.5rem;
     }
 }
 
@@ -97,7 +98,7 @@
         
         padding: 0 0.6rem;
         cursor: pointer;
-
+        
         transition: background var(--transition), color var(--transition);
         
         svg { 
@@ -120,7 +121,7 @@
 .main_content_container {
     display: flex;
     gap: 5px;
-
+    
     overflow-x: auto;
     
     height: fit-content;
@@ -140,7 +141,7 @@
             flex: 1;
         }
         
-        &:not(.shrink) {
+        &:not(.fit) {
             flex: 1;
         }
         
@@ -168,7 +169,7 @@
                 
                 padding: 0 0.6rem;
                 cursor: pointer;
-
+                
                 transition: background var(--transition), color var(--transition);
                 
                 svg { 
@@ -200,7 +201,7 @@
         &:last-of-type {
             border-radius: 0 var(--radius) var(--radius) 0;
         }
-
+        
         .center {
             gap: 5px;
         }
@@ -209,7 +210,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-
+            
             max-width: 75%;
             height: 1.5em;
             
@@ -220,7 +221,7 @@
         
         #play_button {
             position: relative;
-
+            
             width: 75%;
             
             cursor: pointer;
@@ -264,18 +265,18 @@
         aspect-ratio: 1 / 2;
     }
     
-    .player_plate {
+    .preview_container {
         .center {
             gap: 5px;
         }
         
         flex: 1;
         
-        background: var(--background-secondary);
-        border-radius: var(--radius);
-        
-        margin: 5px;
         padding: 5px;
+    }
+
+    .center .flake_ui_loader {
+        margin: 0 2.5em;
     }
 }
 
@@ -416,10 +417,12 @@
 
 @media screen and (max-width: 600px) {
     .dashboard_content {
-        .logo_container {
-            display: none;
+        .heading {
+            .logo_container {
+                display: none;
+            }
         }
-
+        
         .main_content_container .content #play_button {
             width: 100%;
         }
@@ -430,7 +433,7 @@
     .dashboard_content {
         display: none;
     }
-
+    
     .warning_too_small {
         display: flex;
     }
