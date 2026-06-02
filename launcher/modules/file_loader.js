@@ -3,6 +3,7 @@ const loadedStylesheets = new Map();
 let stylesheetCounter = 0;
 
 export function loadCSS(href, parent = document.head) {
+    console.log(`Loading Stylesheet - Source: ${href}, Parent: ${parent}`);
     for (const [id, link] of loadedStylesheets.entries()) {
         if (link.getAttribute('href') === href) {
             return id;
@@ -28,6 +29,7 @@ export function loadCSS(href, parent = document.head) {
 }
 
 export function unloadCSS(id) {
+    console.log(`Unloading Stylesheet with ID: ${id}`);
     if (loadedStylesheets.has(id)) {
         const link = loadedStylesheets.get(id);
         link.remove();
