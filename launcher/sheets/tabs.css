@@ -30,11 +30,11 @@
         }
     }
 
-    .previsible-flex {
+    &.previsible-flex {
         display: flex;
     }
 
-    .previsible-block {
+    &.previsible-block {
         display: block;
     }
 }
