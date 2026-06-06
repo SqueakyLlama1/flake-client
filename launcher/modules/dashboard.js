@@ -75,7 +75,7 @@ async function loadSkinPreview(force, addDelay = false) {
             return;
         }
         
-        const playerSkin = await window.flakeAPI.requestSkin(activeAccount.uuid, force);
+        const playerSkin = await assembleSkin(activeAccount.uuid, force);
         playerBaseSkin = playerSkin.base;
         
         const assembledSkinPreview = `
@@ -189,7 +189,7 @@ async function createAccountNameplate(account, isActive) {
     const nameplateControls = document.createElement('div');
     nameplateControls.className = 'nameplate_controls';
     
-    const playerHead = await window.flakeAPI.requestSkin(account.uuid, undefined, 'head');
+    const playerHead = await assembleSkin(account.uuid, undefined, 'head');
     const nameplateIcon = document.createElement('img');
     nameplateIcon.src = playerHead.assembled;
     
@@ -219,6 +219,87 @@ async function createAccountNameplate(account, isActive) {
     nameplate.appendChild(nameplateControls);
     
     return nameplate;
+}
+
+async function assembleSkin(uuid, force, part = 'all') {
+    try {
+        const skinUrl = await window.flakeAPI.requestSkin(uuid, force);
+        
+        if (!skinUrl || skinUrl.error) {
+            throw new Error(skinUrl?.error || "Failed to retrieve skin URL from API.");
+        }
+
+        console.log(`[SKINS, ASSEMBLE] Drawing skin asset profile layout context targets for part: ${part}...`);
+        
+        const skinImage = await new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = () => resolve(img);
+            img.onerror = (err) => reject(err);
+            img.src = skinUrl;
+        });
+        
+        const allLayers = [
+            [8, 8, 8, 8, 4, 0, 8, 8],     // 0: Head Base
+            [40, 8, 8, 8, 4, 0, 8, 8],    // 1: Head Overlay
+            [20, 20, 8, 12, 4, 8, 8, 12],  // 2: Torso Base
+            [20, 36, 8, 12, 4, 8, 8, 12],  // 3: Torso Overlay
+            [44, 20, 4, 12, 0, 8, 4, 12],  // 4: Right Arm Base
+            [44, 36, 4, 12, 0, 8, 4, 12],  // 5: Right Arm Overlay
+            [36, 52, 4, 12, 12, 8, 4, 12], // 6: Left Arm Base
+            [52, 52, 4, 12, 12, 8, 4, 12], // 7: Left Arm Overlay
+            [4, 20, 4, 12, 4, 20, 4, 12],   // 8: Right Leg Base
+            [4, 36, 4, 12, 4, 20, 4, 12],   // 9: Right Leg Overlay
+            [20, 52, 4, 12, 8, 20, 4, 12], // 10: Left Leg Base
+            [4, 52, 4, 12, 8, 20, 4, 12]    // 11: Left Leg Overlay
+        ];
+        
+        const configs = {
+            head:     { layers: [0, 1],     w: 8,  h: 8,  scale: 10 },
+            torso:    { layers: [2, 3],     w: 8,  h: 12, scale: 10 },
+            rightArm: { layers: [4, 5],     w: 4,  h: 12, scale: 10 },
+            leftArm:  { layers: [6, 7],     w: 4,  h: 12, scale: 10 },
+            rightLeg: { layers: [8, 9],     w: 4,  h: 12, scale: 10 },
+            leftLeg:  { layers: [10, 11],   w: 4,  h: 12, scale: 10 },
+            all:      { layers: [0,1,2,3,4,5,6,7,8,9,10,11], w: 16, h: 32, scale: 10 }
+        };
+        
+        const config = configs[part] || configs.all;
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = config.w;
+        canvas.height = config.h;
+        const ctx = canvas.getContext('2d');
+        
+        config.layers.forEach(index => {
+            const layer = [...allLayers[index]];
+            if (part !== 'all') {
+                layer[4] -= configs[part].layers.includes(index) ? allLayers[config.layers[0]][4] : 0;
+                layer[5] -= configs[part].layers.includes(index) ? allLayers[config.layers[0]][5] : 0;
+            }
+            
+            ctx.drawImage(skinImage, ...layer);
+        });
+        
+        const finalWidth = config.w * config.scale;
+        const finalHeight = config.h * config.scale;
+        
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = finalWidth;
+        finalCanvas.height = finalHeight;
+        const finalCtx = finalCanvas.getContext('2d');
+        
+        finalCtx.imageSmoothingEnabled = false;
+        finalCtx.drawImage(canvas, 0, 0, finalWidth, finalHeight);
+        
+        return { 
+            assembled: finalCanvas.toDataURL('image/png'), 
+            base: skinUrl 
+        };
+    } catch (err) {
+        console.error(`Failed complete skin structural aggregation steps for targeting identity ${uuid}:`, err);
+        return "";
+    }
 }
 
 window.flakeAPI.getLatestAccount();

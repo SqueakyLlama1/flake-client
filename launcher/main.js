@@ -1,14 +1,13 @@
-const { app, BrowserWindow, ipcMain, ipcRenderer } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const os = require('os');
-const fs = require('fs');
+const fs = require('fs').promises; // Fully utilized throughout the script
 const axios = require('axios');
-const { createCanvas, loadImage } = require('canvas');
 const { Launch, Microsoft } = require('minecraft-java-core');
-const { start } = require('repl');
 
 let mainWindow;
 let logWindow;
+
 const activeAccount = {
     uuid: '',
     username: ''
@@ -26,6 +25,139 @@ const windowConfig = {
     }
 };
 
+// --- Helper Utilities ---
+
+function getGamePath() {
+    try {
+        const home = os.homedir() || '';
+        return os.platform() === 'win32' 
+            ? path.join(process.env.APPDATA || '', '.flakeclient') 
+            : path.join(home, '.flakeclient');
+    } catch (err) {
+        console.error("Failed to evaluate platform specific game paths:", err);
+        return path.join('.', '.flakeclient');
+    }
+}
+
+function getAccountsPath() {
+    return path.join(getGamePath(), "accounts");
+}
+
+function getAccountFilePath(uuid) {
+    return path.join(getAccountsPath(), `${uuid}.json`);
+}
+
+/**
+ * Ensures a directory path exists using non-blocking promises.
+ */
+async function ensureDir(dirPath) {
+    try {
+        await fs.mkdir(dirPath, { recursive: true });
+    } catch (err) {
+        if (err.code !== 'EEXIST') throw err;
+    }
+}
+
+/**
+ * Checks if a file exists asynchronously without relying on the deprecated fs.exists
+ */
+async function fileExists(filePath) {
+    try {
+        await fs.access(filePath);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+// --- State Management Logic ---
+
+async function setLatestAccount(uuid) {
+    try {
+        const accountsPath = getAccountsPath();
+        await ensureDir(accountsPath);
+        
+        const targetUUID = uuid || "none";
+        await fs.writeFile(path.join(accountsPath, "latest.txt"), targetUUID, 'utf8');
+        
+        activeAccount.uuid = targetUUID;
+        activeAccount.username = await getLatestUsername();
+    } catch (err) {
+        console.error("Failed writing changes to latest.txt configuration payload:", err);
+    }
+}
+
+async function getLatestAccount() {
+    const metaPath = path.join(getAccountsPath(), "latest.txt");
+    try {
+        if (!(await fileExists(metaPath))) {
+            await setLatestAccount("none");
+            return "none";
+        }
+        const data = await fs.readFile(metaPath, 'utf8');
+        return data.trim() || "none";
+    } catch (err) {
+        console.error("Error encountered reading latest.txt, defaulting to 'none':", err);
+        return "none";
+    }
+}
+
+async function getLatestUsername() {
+    try {
+        const latestAccount = await getLatestAccount();
+        if (latestAccount === "none") return "";
+        
+        const accountPath = getAccountFilePath(latestAccount);
+        if (await fileExists(accountPath)) {
+            try {
+                const data = await fs.readFile(accountPath, 'utf8');
+                const meta = JSON.parse(data);
+                return meta.name ?? meta.username ?? "";
+            } catch (e) {
+                console.error("Failed to parse account profile JSON:", e);
+            }
+        }
+    } catch (err) {
+        console.error("Failed to extract target reference inside getLatestUsername:", err);
+    }
+    return "";
+}
+
+async function saveAccountFile(account) {
+    if (!account || !account.uuid) {
+        console.error("Aborting saveAccountFile: Received missing or invalid account layout.");
+        return;
+    }
+    try {
+        await ensureDir(getAccountsPath());
+        await fs.writeFile(
+            getAccountFilePath(account.uuid), 
+            JSON.stringify(account, null, 4), 
+            'utf8'
+        );
+    } catch (err) {
+        console.error(`Failed writing localized user data structure for UUID ${account.uuid}:`, err);
+    }
+}
+
+async function sendAccountInfo() {
+    try {
+        if (!mainWindow || mainWindow.isDestroyed()) return;
+        const latestUUID = await getLatestAccount();
+        const username = await getLatestUsername();
+        
+        mainWindow.webContents.send('account-info', { 
+            login: latestUUID !== "none", 
+            uuid: latestUUID, 
+            username 
+        });
+    } catch (err) {
+        console.error("Failed emitting cross-process channel action 'account-info':", err);
+    }
+}
+
+// --- Application Windows ---
+
 function createWindow() {
     try {
         mainWindow = new BrowserWindow({
@@ -40,14 +172,12 @@ function createWindow() {
         
         mainWindow.webContents.on('did-finish-load', async () => {
             try {
-                const latestUUID = getLatestAccount();
-                if (latestUUID === "none") {
-                    if (mainWindow && !mainWindow.isDestroyed()) {
-                        mainWindow.webContents.send('prompt-initial-login');
-                    }
+                const latestUUID = await getLatestAccount();
+                if (latestUUID === "none" && mainWindow && !mainWindow.isDestroyed()) {
+                    mainWindow.webContents.send('prompt-initial-login');
                 }
                 activeAccount.uuid = latestUUID;
-                activeAccount.username = getLatestUsername();
+                activeAccount.username = await getLatestUsername();
             } catch (err) {
                 console.error("Error during main window did-finish-load cycle:", err);
             }
@@ -69,106 +199,12 @@ app.whenReady().then(createWindow).catch(err => {
     console.error("Critical: Electron app failed ready initialization stage:", err);
 });
 
-function getGamePath() {
-    try {
-        return os.platform() === 'win32' 
-        ? path.join(process.env.APPDATA || '', '.flakeclient') 
-        : path.join(os.homedir() || '', '.flakeclient');
-    } catch (err) {
-        console.error("Failed to evaluate platform specific game paths:", err);
-        return path.join('.', '.flakeclient');
-    }
-}
-
-function getAccountsPath() {
-    const p = path.join(getGamePath(), "accounts");
-    try {
-        fs.mkdirSync(p, { recursive: true });
-    } catch (err) {
-        console.error(`Failed to verify or create directory chain at ${p}:`, err);
-    }
-    return p;
-}
-
-function setLatestAccount(uuid) {
-    try {
-        fs.writeFileSync(path.join(getAccountsPath(), "latest.txt"), uuid || "none", 'utf8');
-        activeAccount.uuid = uuid || "none";
-        activeAccount.username = getLatestUsername();
-    } catch (err) {
-        console.error("Failed writing changes to latest.txt configuration payload:", err);
-    }
-}
-
-function getLatestAccount() {
-    const metaPath = path.join(getAccountsPath(), "latest.txt");
-    try {
-        if (!fs.existsSync(metaPath)) {
-            setLatestAccount("none");
-            return "none";
-        }
-        return fs.readFileSync(metaPath, 'utf8').trim() || "none";
-    } catch (err) {
-        console.error("Error encountered reading latest.txt, defaulting to 'none':", err);
-        return "none";
-    }
-}
-
-function getAccountFilePath(uuid) {
-    return path.join(getAccountsPath(), `${uuid}.json`);
-}
-
-function saveAccountFile(account) {
-    if (!account || !account.uuid) {
-        console.error("Aborting saveAccountFile: Received missing or invalid account layout.");
-        return;
-    }
-    try {
-        fs.writeFileSync(getAccountFilePath(account.uuid), JSON.stringify(account, null, 4), 'utf8');
-    } catch (err) {
-        console.error(`Failed writing localized user data structure for UUID ${account.uuid}:`, err);
-    }
-}
-
-function getLatestUsername() {
-    try {
-        const latestAccount = getLatestAccount();
-        if (latestAccount === "none") return "";
-        
-        const accountPath = getAccountFilePath(latestAccount);
-        if (fs.existsSync(accountPath)) {
-            try {
-                const meta = JSON.parse(fs.readFileSync(accountPath, 'utf8'));
-                return meta.name ?? "";
-            } catch (e) {
-                console.error("Failed to parse account profile JSON:", e);
-            }
-        }
-    } catch (err) {
-        console.error("Failed to extract target reference inside getLatestUsername:", err);
-    }
-    return "";
-}
-
-function sendAccountInfo() {
-    try {
-        if (!mainWindow || mainWindow.isDestroyed()) return;
-        const latestUUID = getLatestAccount();
-        
-        mainWindow.webContents.send('account-info', { 
-            login: latestUUID !== "none", 
-            uuid: latestUUID, 
-            username: getLatestUsername() 
-        });
-    } catch (err) {
-        console.error("Failed emitting cross-process channel action 'account-info':", err);
-    }
-}
+// --- IPC Interface Handlers ---
 
 ipcMain.handle('get-latest-account', async () => {
     try {
-        sendAccountInfo();
-        return { uuid: getLatestAccount(), username: getLatestUsername() };
+        await sendAccountInfo();
+        return { uuid: await getLatestAccount(), username: await getLatestUsername() };
     } catch (err) {
         console.error("IPC Handler error within 'get-latest-account':", err);
         return { uuid: "none", username: "" };
@@ -177,9 +213,9 @@ ipcMain.handle('get-latest-account', async () => {
 
 ipcMain.handle('switch-account', async (event, uuid) => {
     try {
-        if (uuid === "none" || fs.existsSync(getAccountFilePath(uuid))) {
-            setLatestAccount(uuid);
-            sendAccountInfo();
+        if (uuid === "none" || (await fileExists(getAccountFilePath(uuid)))) {
+            await setLatestAccount(uuid);
+            await sendAccountInfo();
             return { success: true };
         }
         return { success: false, error: "Account data file does not exist." };
@@ -194,56 +230,46 @@ ipcMain.handle('sign-out', async (event, uuid) => {
         const accountsPath = getAccountsPath();
         
         if (uuid === "all") {
-            try {
-                if (fs.existsSync(accountsPath)) {
-                    fs.readdirSync(accountsPath)
-                    .filter(file => path.extname(file).toLowerCase() === '.json')
-                    .forEach(file => {
-                        try {
-                            fs.unlinkSync(path.join(accountsPath, file));
-                        } catch (ex) {
-                            console.error(`Failed unlinking individual data structure ${file}:`, ex);
-                        }
-                    });
-                }
-            } catch (dirErr) {
-                console.error("Failed while tracking operations inside directory cleanup:", dirErr);
+            if (await fileExists(accountsPath)) {
+                const files = await fs.readdir(accountsPath);
+                const jsonFiles = files.filter(file => path.extname(file).toLowerCase() === '.json');
+                
+                await Promise.all(jsonFiles.map(async (file) => {
+                    try {
+                        await fs.unlink(path.join(accountsPath, file));
+                    } catch (ex) {
+                        console.error(`Failed unlinking individual data structure ${file}:`, ex);
+                    }
+                }));
             }
-            setLatestAccount("none");
-            sendAccountInfo();
+            await setLatestAccount("none");
+            await sendAccountInfo();
             return { success: true, message: "All accounts cleared." };
         } 
         
         const accountPath = getAccountFilePath(uuid);
-        if (fs.existsSync(accountPath)) {
-            try {
-                fs.unlinkSync(accountPath);
-            } catch (unlinkErr) {
-                console.error(`Failed attempting file system removal on target file ${uuid}.json:`, unlinkErr);
-            }
+        if (await fileExists(accountPath)) {
+            await fs.unlink(accountPath);
         } else {
             console.warn(`Sign out target file not found: ${uuid}.json`);
         }
         
-        if (getLatestAccount() === uuid) {
+        if ((await getLatestAccount()) === uuid) {
             let remainingAccounts = [];
-            try {
-                remainingAccounts = fs.readdirSync(accountsPath)
-                .filter(file => path.extname(file).toLowerCase() === '.json');
-            } catch (readErr) {
-                console.error("Failed inspecting accounts directory for fallback indexing:", readErr);
+            if (await fileExists(accountsPath)) {
+                const files = await fs.readdir(accountsPath);
+                remainingAccounts = files.filter(file => path.extname(file).toLowerCase() === '.json');
             }
             
             if (remainingAccounts.length > 0) {
-                setLatestAccount(path.basename(remainingAccounts[0], '.json'));
+                await setLatestAccount(path.basename(remainingAccounts[0], '.json'));
             } else {
-                setLatestAccount("none");
+                await setLatestAccount("none");
             }
-            sendAccountInfo();
+            await sendAccountInfo();
         }
         
         return { success: true };
-        
     } catch (error) {
         console.error(`Failed to execute sign out for target "${uuid}":`, error);
         return { success: false, error: error.message };
@@ -255,9 +281,9 @@ ipcMain.handle('trigger-login', async () => {
         const authAccount = await new Microsoft().getAuth();
         
         if (authAccount?.uuid) {
-            saveAccountFile(authAccount);
-            setLatestAccount(authAccount.uuid);
-            sendAccountInfo();
+            await saveAccountFile(authAccount);
+            await setLatestAccount(authAccount.uuid);
+            await sendAccountInfo();
             return { success: true, username: authAccount.name };
         }
         throw new Error("Authentication failed or cancelled by user.");
@@ -270,22 +296,24 @@ ipcMain.handle('trigger-login', async () => {
 ipcMain.handle('request-account-list', async () => {
     try {
         const accountsPath = getAccountsPath();
-        if (!fs.existsSync(accountsPath)) return [];
+        if (!(await fileExists(accountsPath))) return [];
         
-        const accountList = fs.readdirSync(accountsPath)
-        .filter(file => path.extname(file).toLowerCase() === '.json')
-        .reduce((list, file) => {
+        const files = await fs.readdir(accountsPath);
+        const jsonFiles = files.filter(file => path.extname(file).toLowerCase() === '.json');
+        
+        const accountList = [];
+        for (const file of jsonFiles) {
             try {
-                const profile = JSON.parse(fs.readFileSync(path.join(accountsPath, file), 'utf8'));
-                list.push({
-                    username: profile.name ?? "Unknown",
+                const data = await fs.readFile(path.join(accountsPath, file), 'utf8');
+                const profile = JSON.parse(data);
+                accountList.push({
+                    username: profile.name ?? profile.username ?? "Unknown",
                     uuid: path.basename(file, '.json')
                 });
             } catch (jsonError) {
                 console.error(`Skipping invalid or corrupted account file: ${file}`, jsonError);
             }
-            return list;
-        }, []);
+        }
         
         return accountList;
     } catch (error) {
@@ -319,13 +347,12 @@ ipcMain.handle('open-logs', async () => {
 ipcMain.handle('launch-game', async (event, { version }) => {
     try {
         const isOffline = !await checkAuthServer();
-        
         const launcher = new Launch();
         const gamePath = getGamePath();
-        const UUID = getLatestAccount();
+        const UUID = await getLatestAccount();
         
         launcher.on('progress', (progress, size) => {
-            if (!mainWindow?.isDestroyed()) {
+            if (mainWindow && !mainWindow.isDestroyed()) {
                 mainWindow.webContents.send('launcher-progress', ((progress / size) * 100).toFixed(2));
             }
         });
@@ -333,15 +360,13 @@ ipcMain.handle('launch-game', async (event, { version }) => {
             if (logWindow && !logWindow.isDestroyed() && logWindow.webContents) logWindow.webContents.send('launcher-log', patch);
         });
         launcher.on('data', (rawLog) => {
-            if (logWindow && !logWindow.isDestroyed() && logWindow.webContents) {
-                logWindow.webContents.send('launcher-log', rawLog);
-            }
+            if (logWindow && !logWindow.isDestroyed() && logWindow.webContents) logWindow.webContents.send('launcher-log', rawLog);
         });
         launcher.on('close', (code) => {
-            if (!mainWindow?.isDestroyed()) mainWindow.webContents.send('launcher-closed', code);
+            if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('launcher-closed', code);
         });
         launcher.on('error', (err) => {
-            if (!mainWindow?.isDestroyed()) mainWindow.webContents.send('launcher-error', err ? err.message : "Unknown context error");
+            if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('launcher-error', err ? err.message : "Unknown context error");
         });
         
         if (UUID === "none") {
@@ -350,21 +375,22 @@ ipcMain.handle('launch-game', async (event, { version }) => {
             }
             const msAuthenticator = new Microsoft();
             const authAccount = await msAuthenticator.getAuth();
-            saveAccountFile(authAccount);
-            setLatestAccount(authAccount.uuid);
-            sendAccountInfo();
+            await saveAccountFile(authAccount);
+            await setLatestAccount(authAccount.uuid);
+            await sendAccountInfo();
             
             return launchWithProfile(launcher, gamePath, version, authAccount);
         }
         
         const accountPath = getAccountFilePath(UUID);
-        if (!fs.existsSync(accountPath)) {
+        if (!(await fileExists(accountPath))) {
             throw new Error("Account profile data missing. Please log in again.");
         }
         
         let savedProfile;
         try {
-            savedProfile = JSON.parse(fs.readFileSync(accountPath, 'utf-8'));
+            const data = await fs.readFile(accountPath, 'utf-8');
+            savedProfile = JSON.parse(data);
         } catch (err) {
             if (isOffline) throw new Error("Cached account file is corrupted. Cannot launch offline.");
             console.error("Corrupted authentication profile, forcing re-auth:", err);
@@ -385,18 +411,18 @@ ipcMain.handle('launch-game', async (event, { version }) => {
                 try {
                     authAccount = await msAuthenticator.refresh(savedProfile);
                     if (authAccount.error) throw new Error("Invalid token payload");
-                    saveAccountFile(authAccount);
+                    await saveAccountFile(authAccount);
                 } catch {
                     authAccount = await msAuthenticator.getAuth(); 
-                    saveAccountFile(authAccount);
-                    setLatestAccount(authAccount.uuid);
-                    sendAccountInfo();
+                    await saveAccountFile(authAccount);
+                    await setLatestAccount(authAccount.uuid);
+                    await sendAccountInfo();
                 }
             } else {
                 authAccount = await msAuthenticator.getAuth(); 
-                saveAccountFile(authAccount);
-                setLatestAccount(authAccount.uuid);
-                sendAccountInfo();
+                await saveAccountFile(authAccount);
+                await setLatestAccount(authAccount.uuid);
+                await sendAccountInfo();
             }
         }
         
@@ -420,120 +446,50 @@ function launchWithProfile(launcher, gamePath, version, authAccount) {
     return { success: true };
 }
 
-ipcMain.handle('request-skin', async (_event, uuid, force, part = 'all') => {
+ipcMain.handle('request-skin', async (_event, uuid, force) => {
     try {
-        return await assembleSkin(uuid, force, part);
+        return await getSkin(uuid, force);
     } catch (err) {
         console.error(`IPC Handler error processing request-skin for target ${uuid}:`, err);
         return { error: err.message };
     }
 });
 
-async function assembleSkin(uuid, force, part = 'all') {
+async function getSkin(uuid, force) {
     try {
         const outputPath = path.join(getGamePath(), "cache", "skins");
-        
-        try {
-            fs.mkdirSync(outputPath, { recursive: true });
-        } catch (dirErr) {
-            console.error("Failed creating nested cache folders maps for skins operations:", dirErr);
-        }
-        
         const rawCacheFile = path.join(outputPath, `${uuid}_raw.png`);
-        let rawSkinBuffer;
-        
-        if (fs.existsSync(rawCacheFile) && !force) {
-            console.log(`[SKINS] Loading raw skin from offline cache for ${uuid}`);
-            rawSkinBuffer = fs.readFileSync(rawCacheFile);
-        } else {
-            console.log(`[SKINS] Downloading skin from Mojang servers for ${uuid}`);
-            const skin = await getSkin(uuid);
-            if (skin && skin.error) throw new Error(skin.error);
-            
-            if (Buffer.isBuffer(skin)) {
-                rawSkinBuffer = skin;
-            } else if (typeof skin === 'string' && skin.startsWith('data:')) {
-                rawSkinBuffer = Buffer.from(skin.split(',')[1], 'base64');
-            } else {
-                const response = await axios.get(skin, { responseType: 'arraybuffer' });
-                rawSkinBuffer = Buffer.from(response.data);
-            }
-            
-            fs.writeFileSync(rawCacheFile, rawSkinBuffer);
-        }
-        
-        const baseDataUrl = `data:image/png;base64,${rawSkinBuffer.toString('base64')}`;
-        
-        console.log(`[SKINS, ASSEMBLE] Drawing skin asset profile layout context targets for part: ${part}...`);
-        const skinImage = await loadImage(rawSkinBuffer);
-        
-        const allLayers = [
-            [8, 8, 8, 8, 4, 0, 8, 8],     // 0: Head Base
-            [40, 8, 8, 8, 4, 0, 8, 8],    // 1: Head Overlay
-            [20, 20, 8, 12, 4, 8, 8, 12],  // 2: Torso Base
-            [20, 36, 8, 12, 4, 8, 8, 12],  // 3: Torso Overlay
-            [44, 20, 4, 12, 0, 8, 4, 12],  // 4: Right Arm Base
-            [44, 36, 4, 12, 0, 8, 4, 12],  // 5: Right Arm Overlay
-            [36, 52, 4, 12, 12, 8, 4, 12], // 6: Left Arm Base
-            [52, 52, 4, 12, 12, 8, 4, 12], // 7: Left Arm Overlay
-            [4, 20, 4, 12, 4, 20, 4, 12],   // 8: Right Leg Base
-            [4, 36, 4, 12, 4, 20, 4, 12],   // 9: Right Leg Overlay
-            [20, 52, 4, 12, 8, 20, 4, 12], // 10: Left Leg Base
-            [4, 52, 4, 12, 8, 20, 4, 12]    // 11: Left Leg Overlay
-        ];
-        
-        const configs = {
-            head:     { layers: [0, 1],     w: 8,  h: 8,  scale: 10 },
-            torso:    { layers: [2, 3],     w: 8,  h: 12, scale: 10 },
-            rightArm: { layers: [4, 5],     w: 4,  h: 12, scale: 10 },
-            leftArm:  { layers: [6, 7],     w: 4,  h: 12, scale: 10 },
-            rightLeg: { layers: [8, 9],     w: 4,  h: 12, scale: 10 },
-            leftLeg:  { layers: [10, 11],   w: 4,  h: 12, scale: 10 },
-            all:      { layers: [0,1,2,3,4,5,6,7,8,9,10,11], w: 16, h: 32, scale: 10 }
-        };
-        
-        const config = configs[part] || configs.all;
-        const canvas = createCanvas(config.w, config.h);
-        const ctx = canvas.getContext('2d');
-        
-        config.layers.forEach(index => {
-            const layer = [...allLayers[index]];
-            if (part !== 'all') {
-                layer[4] -= configs[part].layers.includes(index) ? allLayers[config.layers[0]][4] : 0;
-                layer[5] -= configs[part].layers.includes(index) ? allLayers[config.layers[0]][5] : 0;
-            }
-            
-            ctx.drawImage(skinImage, ...layer);
-        });
-        
-        const finalWidth = config.w * config.scale;
-        const finalHeight = config.h * config.scale;
-        
-        const finalCanvas = createCanvas(finalWidth, finalHeight);
-        const finalCtx = finalCanvas.getContext('2d');
-        finalCtx.imageSmoothingEnabled = false;
-        finalCtx.drawImage(canvas, 0, 0, finalWidth, finalHeight);
-        
-        return { 
-            assembled: finalCanvas.toDataURL('image/png'),
-            base: baseDataUrl 
-        };
-        
-    } catch (err) {
-        console.error(`Failed complete skin structural aggregation steps for targeting identity ${uuid}:`, err);
-        return "";
-    }
-}
 
-async function getSkin(uuid) {
-    try {
+        await ensureDir(outputPath);
+        
+        let isCached = false;
+        if (!force) {
+            isCached = await fileExists(rawCacheFile);
+        }
+
         const profileResponse = await axios.get(`https://sessionserver.mojang.com/session/minecraft/profile/${uuid}`);
         const textureProperty = profileResponse.data?.properties?.find(prop => prop.name === 'textures');
         
-        if (!textureProperty) throw new Error("[SKINS, GET] No textures found for this player.");
+        if (!textureProperty) {
+            throw new Error("[SKINS, GET] No textures found for this player.");
+        }
         
         const decodedJson = Buffer.from(textureProperty.value, 'base64').toString('utf-8');
-        return JSON.parse(decodedJson).textures.SKIN.url;
+        const skinUrl = JSON.parse(decodedJson).textures?.SKIN?.url;
+
+        if (!skinUrl) {
+            throw new Error("[SKINS, GET] Player has no skin URL.");
+        }
+
+        if (force || !isCached) {
+            const response = await axios.get(skinUrl, { responseType: 'arraybuffer' });
+            const rawSkinBuffer = Buffer.from(response.data);
+            
+            await ensureDir(outputPath);
+            await fs.writeFile(rawCacheFile, rawSkinBuffer);
+        }
+
+        return skinUrl;
     } catch (error) {
         console.error(`Failed to lookup Mojang texture maps profile API endpoint data for context identity ${uuid}:`, error);
         return { error: error.message };
