@@ -43,7 +43,7 @@
         
         overflow: auto;
         
-        .main { 
+        .main {
             flex: 1;
         }
         
@@ -51,13 +51,13 @@
             flex: 1;
         }
         
-        .controls { 
+        .controls {
             display: flex; 
             flex-direction: column;
             
             button {
                 flex: 1;
-                aspect-ratio: 1 / 1;
+                aspect-ratio: 1 ;
                 
                 position: relative;
                 display: flex;
@@ -78,7 +78,9 @@
                 
                 transition: background var(--transition), color var(--transition);
                 
-                svg { 
+                svg {
+                    width: 2em;
+                    aspect-ratio: 1;
                     fill: var(--brand-primary); 
                     transition: fill var(--transition);
                 }
@@ -180,7 +182,7 @@
         
         padding: 5px;
     }
-
+    
     .center .flake_ui_loader {
         margin: 0 2.5em;
     }
@@ -217,7 +219,9 @@
         
         transition: background var(--transition);
         
-        svg { 
+        svg {
+            width: 2em;
+            aspect-ratio: 1;
             fill: var(--brand-primary); 
             transition: fill var(--transition);
         }
@@ -254,7 +258,7 @@
             
             img {
                 height: 100%;
-                aspect-ratio: 1 / 1;
+                aspect-ratio: 1;
                 border-radius: var(--radius);
             }
         }
@@ -297,7 +301,9 @@
                 
                 transition: background var(--transition);
                 
-                svg { 
+                svg {
+                    width: 2em;
+                    aspect-ratio: 1;
                     fill: var(--brand-primary); 
                     transition: fill var(--transition);
                 }

@@ -248,7 +248,7 @@ h6 span { font-size: 0.45em; }
 }
 
 
-@keyframes load_spin { 
+@keyframes load_spin {
     100%{
         transform: rotate(1turn);
     }

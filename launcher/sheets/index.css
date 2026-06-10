@@ -92,7 +92,9 @@
             
             transition: background var(--transition), color var(--transition);
             
-            svg { 
+            svg {
+                width: 2em;
+                aspect-ratio: 1;
                 fill: var(--brand-primary); 
                 transition: fill var(--transition);
             }
@@ -124,4 +126,9 @@
     border-radius: calc(var(--radius) - 2px);
     
     margin-top: auto;
+}
+
+/* Pre-Hidden Items */
+#load_menu_title {
+    display: none;
 }
