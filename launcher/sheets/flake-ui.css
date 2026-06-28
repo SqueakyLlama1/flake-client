@@ -17,7 +17,7 @@ html, body {
 }
 
 body {
-    background: url('../assets/static_backdrop.png') center / cover;
+    background: url('../assets/img/static_backdrop.png') center / cover;
     
     margin: 0;
 }

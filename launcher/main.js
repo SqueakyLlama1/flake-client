@@ -162,8 +162,8 @@ function createWindow() {
     try {
         mainWindow = new BrowserWindow({
             ...windowConfig,
-            minWidth: 500,
-            minHeight: 575
+            minWidth: 800,
+            minHeight: 600
         });
         
         mainWindow.loadFile(path.join(__dirname, 'index.html')).catch(err => {
