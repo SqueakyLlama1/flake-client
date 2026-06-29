@@ -31,12 +31,11 @@
     
     height: 2.5rem;
     
-    background: color-mix(in srgb, var(--background-primary) 90%, transparent);
-    border: 2px solid var(--background-secondary);
+    background: color-mix(in srgb, var(--background-tertiary) 90%, transparent);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     
-    padding-left: calc(var(--radius) / 2);
+    padding-left: calc(var(--radius) * 2);
     
     
     .logo_container {
@@ -80,7 +79,7 @@
             justify-content: center;
             gap: 4px;
             
-            background: var(--background-secondary);
+            background: var(--background-quarternary);
             border: none;
             
             color: var(--brand-primary);
@@ -100,7 +99,7 @@
             }
             
             &:hover {
-                background: var(--background-tertiary);
+                background: var(--background-quinary);
                 color: var(--brand-tertiary);
                 svg { fill: var(--brand-tertiary); }
             }

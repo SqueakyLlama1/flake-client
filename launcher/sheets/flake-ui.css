@@ -30,9 +30,9 @@ h5 span { font-size: 0.67em; }
 h6 span { font-size: 0.45em; }
 
 ::-webkit-scrollbar { width: 7px; height: 5px; }
-::-webkit-scrollbar-track { background: var(--background-secondary); }
-::-webkit-scrollbar-thumb { background: var(--background-tertiary); }
-::-webkit-scrollbar-thumb:hover { background: var(--background-quarternary); }
+::-webkit-scrollbar-track { background: var(--background-tertiary); }
+::-webkit-scrollbar-thumb { background: var(--background-quinary); }
+::-webkit-scrollbar-thumb:hover { background: var(--brand-primary); }
 
 .hidden {
     display: none !important;

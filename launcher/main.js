@@ -31,8 +31,8 @@ function getGamePath() {
     try {
         const home = os.homedir() || '';
         return os.platform() === 'win32' 
-            ? path.join(process.env.APPDATA || '', '.flakeclient') 
-            : path.join(home, '.flakeclient');
+        ? path.join(process.env.APPDATA || '', '.flakeclient') 
+        : path.join(home, '.flakeclient');
     } catch (err) {
         console.error("Failed to evaluate platform specific game paths:", err);
         return path.join('.', '.flakeclient');
@@ -48,8 +48,8 @@ function getAccountFilePath(uuid) {
 }
 
 /**
- * Ensures a directory path exists using non-blocking promises.
- */
+* Ensures a directory path exists using non-blocking promises.
+*/
 async function ensureDir(dirPath) {
     try {
         await fs.mkdir(dirPath, { recursive: true });
@@ -59,8 +59,8 @@ async function ensureDir(dirPath) {
 }
 
 /**
- * Checks if a file exists asynchronously without relying on the deprecated fs.exists
- */
+* Checks if a file exists asynchronously without relying on the deprecated fs.exists
+*/
 async function fileExists(filePath) {
     try {
         await fs.access(filePath);
@@ -459,14 +459,14 @@ async function getSkin(uuid, force) {
     try {
         const outputPath = path.join(getGamePath(), "cache", "skins");
         const rawCacheFile = path.join(outputPath, `${uuid}_raw.png`);
-
+        
         await ensureDir(outputPath);
         
         let isCached = false;
         if (!force) {
             isCached = await fileExists(rawCacheFile);
         }
-
+        
         const profileResponse = await axios.get(`https://sessionserver.mojang.com/session/minecraft/profile/${uuid}`);
         const textureProperty = profileResponse.data?.properties?.find(prop => prop.name === 'textures');
         
@@ -476,11 +476,11 @@ async function getSkin(uuid, force) {
         
         const decodedJson = Buffer.from(textureProperty.value, 'base64').toString('utf-8');
         const skinUrl = JSON.parse(decodedJson).textures?.SKIN?.url;
-
+        
         if (!skinUrl) {
             throw new Error("[SKINS, GET] Player has no skin URL.");
         }
-
+        
         if (force || !isCached) {
             const response = await axios.get(skinUrl, { responseType: 'arraybuffer' });
             const rawSkinBuffer = Buffer.from(response.data);
@@ -488,7 +488,7 @@ async function getSkin(uuid, force) {
             await ensureDir(outputPath);
             await fs.writeFile(rawCacheFile, rawSkinBuffer);
         }
-
+        
         return skinUrl;
     } catch (error) {
         console.error(`Failed to lookup Mojang texture maps profile API endpoint data for context identity ${uuid}:`, error);
@@ -521,5 +521,56 @@ ipcMain.handle('get-active-account', async () => {
     } catch (err) {
         console.error("IPC exception encountered processing get-active-account tracking information:", err);
         return null;
+    }
+});
+
+ipcMain.handle('get-manifest', async (_event, loader, game_version) => {
+    try {
+        let response;
+        
+        switch (loader) {
+            case 'vanilla':
+                response = await axios.get('https://piston-meta.mojang.com/mc/game/version_manifest_v2.json');
+                return response.data;
+
+            case 'fabric':
+                response = await axios.get(`https://meta.fabricmc.net/v2/versions/loader/${game_version}`);
+                return response.data;
+
+            case 'quilt':
+                response = await axios.get(`https://meta.quiltmc.org/v3/versions/loader/${game_version}`);
+                return response.data;
+
+            case 'forge':
+                response = await axios.get(`https://bmclapi2.bangbang93.com/forge/minecraft/${game_version}`);
+                return response.data;
+
+            case 'neoforge':
+                response = await axios.get('https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge');
+                
+                const parser = new xml2js.Parser({ explicitArray: false });
+                const parsedXml = await parser.parseStringPromise(response.data);
+                const allVersions = parsedXml.metadata.versioning.versions.version;
+
+                const versionParts = game_version.split('.');
+                const targetMajor = versionParts[1];
+                const targetMinor = versionParts[2] || '0';
+
+                const filteredNeoVersions = allVersions.filter(neoVersion => {
+                    const parts = neoVersion.split('.');
+                    if (parseInt(parts[0]) < 26) {
+                        return parts[0] === targetMajor && parts[1] === targetMinor;
+                    } else {
+                        return parts[0] === targetMajor && parts[1] === targetMinor;
+                    }
+                });
+
+                return filteredNeoVersions.reverse();
+
+            default:
+                throw new Error(`Unknown mod loader type: ${loader}`);
+        }
+    } catch (err) {
+        throw new Error(`Failed to download version manifest for ${loader}: ${err.message}`);
     }
 });

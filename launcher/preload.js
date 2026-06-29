@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('flakeAPI', {
     requestSkin: (uuid, force) => ipcRenderer.invoke('request-skin', uuid, force),
     checkAuthServers: () => ipcRenderer.invoke('check-auth-servers'),
     getActiveAccount: () => ipcRenderer.invoke('get-active-account'),
+    getManifest: (loader, gameVersion) => ipcRenderer.invoke('get-manifest', loader, gameVersion),
 
     onAccountInfo: (callback) => ipcRenderer.on('account-info', (event, value) => callback(value)),
     onProgress: (callback) => ipcRenderer.on('launcher-progress', (event, value) => callback(value)),
